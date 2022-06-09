@@ -1,4 +1,5 @@
 # BookReview MSA
 
 - BookReview BFF
-- BookReview API
+- Book API
+- Review API

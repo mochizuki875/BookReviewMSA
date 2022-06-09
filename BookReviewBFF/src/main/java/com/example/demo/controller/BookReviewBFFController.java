@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.entity.Book;
+import com.example.demo.entity.BookDetail;
 import com.example.demo.entity.BookList;
 import com.example.demo.entity.Review;
 import com.example.demo.service.BookService;
@@ -28,102 +31,119 @@ import com.example.demo.service.ReviewService;
 @Controller
 @RequestMapping
 public class BookReviewBFFController {
+	final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
+	final String REVIEW_API_URL = "http://127.0.0.1:8083/api/review"; // Review APIのURL
+	
 	// Serviceインスタンスを作成
 	@Autowired
 	BookService bookService;
 	@Autowired
 	ReviewService reviewService;
+
+	// RestTemplateインスタンス作成
+	RestTemplate restTemplate = new RestTemplate();
 	
+	// Loggerインスタンス作成
 	Logger logger = Logger.getLogger(BookReviewBFFController.class.getName());
 	ConsoleHandler handler = new ConsoleHandler();
-	
-	static int topNumber = 10; // トップページの表示件数
-	static int pageSize = 10; // 1ページあたりの表示件数
 	
 	// ホーム画面を表示
 	@GetMapping("/")
 	public String showHome(@RequestParam(value="user", required=false) String user, Model model) {
-		logger.log(Level.INFO, "GET /?user=" + user);
-		
-		model.addAttribute("user", user); // userをModelに格納
-		
-		int showFlag = 0; // Book表示フラグ
-		model.addAttribute("showFlag", showFlag); // Modelに格納
-		
-		logger.log(Level.INFO, "Get bookList of top " + topNumber + ".");
-		logger.log(Level.FINE, "bookService.selectTopN(" + topNumber + ")");
-		
-		// ここでAPIを呼び出す
-		// Iterable<Book> bookList = bookService.selectTopN(topNumber); // Book情報のうち上位topNumber件を件取得
-		
-		// --- 仮実装 ---
-		String url = "http://127.0.0.1:8082/api/";
-		RestTemplate restTemplate = new RestTemplate(); // グローバルでやる
-		ResponseEntity<BookList> response = restTemplate.exchange(url + "book", HttpMethod.GET, null, BookList.class);
-		Iterable<Book> bookList = response.getBody().getBookListPage();
-		// -------------
-		
-		model.addAttribute("bookList", bookList); // Modelに格納
-
-		logger.log(Level.INFO, "return home.");
-		return "home";
+		try {
+			logger.log(Level.INFO, "GET /?user=" + user);
+			
+			model.addAttribute("user", user); // userをModelに格納
+			
+			int showFlag = 0; // Book表示フラグ
+			model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
+			
+			logger.log(Level.INFO, "Get bookList of top.");
+			
+			// APIリクエスト実行
+			logger.log(Level.INFO, "GET " + BOOK_API_URL + "?user=" + user);
+			ResponseEntity<BookList> response = restTemplate.exchange(BOOK_API_URL + "?user={user}", HttpMethod.GET, null, BookList.class, user);
+			
+			model.addAttribute("bookList", response.getBody().getBookListPage()); // bookListをModelに格納
+	
+			logger.log(Level.INFO, "return home.");
+			return "home";
+		}
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		} 
 	}
 	
 	// 全ての本を表示（page件単位でページ分割した際の指定されたページ分）
 	@GetMapping("/book")
 	public String showAllBook(@RequestParam(value="user", required=false) String user, @RequestParam(value="page", defaultValue = "1") int page, Model model) {
-		logger.log(Level.INFO, "GET /book?user=" + user + "&page=" + page);
-		
-		model.addAttribute("user", user); // userをModelに格納
-		
-		int showFlag = 1; // Book表示フラグ
-		model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
-		
-		model.addAttribute("page", page); // pageをModelに格納
-		
-		int allPages = bookService.countAllPages(pageSize); // 全ページ数を取得
-		model.addAttribute("allPages", allPages); // allPagesをModelに格納
-		
-		logger.log(Level.INFO, "Get bookList of page " + page + "/" + allPages + ".(pageSize=" + pageSize + ")");
-		logger.log(Level.FINE, "bookService.selectAllDescByPage(" + page + ", " + allPages + ")");
-		
-		Iterable<Book> bookList = bookService.selectAllDescByPage(page, pageSize); // 指定したページのBook情報一覧を取得		
-		model.addAttribute("bookList", bookList); // bookListをModelに格納
-		
-		logger.log(Level.INFO, "return home.");
-		return "home";
+		try {
+			logger.log(Level.INFO, "GET /book?user=" + user + "&page=" + page);
+			
+			model.addAttribute("user", user); // userをModelに格納
+			
+			int showFlag = 1; // Book表示フラグ
+			model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
+			
+			// APIリクエスト実行
+			logger.log(Level.INFO, "GET " + BOOK_API_URL + "?user=" + user + "&page=" + page);
+			ResponseEntity<BookList> response = restTemplate.exchange(BOOK_API_URL + "?user={user}&page={page}", HttpMethod.GET, null, BookList.class, user, page);
+			
+			model.addAttribute("bookList", response.getBody().getBookListPage()); // bookListをModelに格納
+			model.addAttribute("page", response.getBody().getPage()); //  pageをModelに格納
+			model.addAttribute("allPages", response.getBody().getAllPages()); //  allPagesをModelに格納
+			
+			logger.log(Level.INFO, "return home.");
+			return "home";
+			
+		}
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		} 
 	}	
 	
 	// 本の検索
 	// 検索ワードをリクエストパラメータとして受け取って検索結果を返す（page件単位でページ分割した際の指定されたページ分）
 	@GetMapping("/book/search")
 	public String searchBook(@RequestParam(value="user", required=false) String user, @RequestParam(value="keyword", required=false) String keyword, @RequestParam(value="page", defaultValue = "1") int page, RedirectAttributes redirectAttributes, Model model) {
-		logger.log(Level.INFO, "GET /book/search?user=" + user + "&keyword=" + keyword + "&page=" + page);
-		
-		model.addAttribute("user", user); // userをModelに格納		
-				
-		int showFlag = 2; // Book表示フラグ
-		model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
-		
-		model.addAttribute("page", page); // pageをModelに格納
-
-		model.addAttribute("keyword", keyword); // keywordをModelに格納
-
-		int allPages = bookService.countSearchAllPages(keyword, pageSize); // 検索結果の全ページ数を取得
-		model.addAttribute("allPages", allPages); // allPagesをModelに格納
-		
-		logger.log(Level.INFO, "Search keyword=" + keyword + " and get bookList of page " + page + "/" + allPages  + ".(pageSize=" + pageSize + ")");
-		logger.log(Level.FINE, "bookService.searchAllDescByPage(" + keyword + ", " +  page + ", " +  pageSize + ")");
-		
-		Iterable<Book> bookList = bookService.searchAllDescByPage(keyword, page, pageSize); // keyword検索結果のうち指定したページのBook情報一覧を取得
-		model.addAttribute(bookList); // bookListをModelに格納
-				
-		if(keyword == "") { // keywordが指定されていない場合はトップページに戻る
+		try {
+			logger.log(Level.INFO, "GET /book/search?user=" + user + "&keyword=" + keyword + "&page=" + page);
+			
+			model.addAttribute("user", user); // userをModelに格納		
+					
+			int showFlag = 2; // Book表示フラグ
+			model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
+	
+			model.addAttribute("keyword", keyword); // keywordをModelに格納
+			
+			logger.log(Level.INFO, "Search keyword=" + keyword + " and get bookList of page " + page);
+			
+			// APIリクエスト実行
+			logger.log(Level.INFO, "GET " + BOOK_API_URL + "/search?user=" + user + "keyword=" + keyword + "&page=" + page);
+			ResponseEntity<BookList> response = restTemplate.exchange(BOOK_API_URL + "/search?user={user}&keyword={keyword}&page={page}", HttpMethod.GET, null, BookList.class, user, keyword, page);
+			model.addAttribute("bookList", response.getBody().getBookListPage()); // bookListをModelに格納
+			model.addAttribute("page", response.getBody().getPage()); //  pageをModelに格納
+			model.addAttribute("allPages", response.getBody().getAllPages()); //  allPagesをModelに格納
+					
+			if(keyword == "") { // keywordが指定されていない場合はトップページに戻る
+				logger.log(Level.INFO, "return home.");
+				return "redirect:/" + "?user=" + user;
+			}
 			logger.log(Level.INFO, "return home.");
-			return "redirect:/" + "?user=" + user;
+			return "home";
 		}
-		logger.log(Level.INFO, "return home.");
-		return "home";
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		} 
 	}
 	
 	// 本の詳細画面表示
@@ -134,20 +154,14 @@ public class BookReviewBFFController {
 		
 		model.addAttribute("user", user); // userをModelに格納
 		
-		logger.log(Level.INFO, "Get book.");
+		logger.log(Level.INFO, "Get book detail.");
 		logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 		
-		Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidから本の詳細情報を取得
-		if(bookOpt.isPresent()) {
-			logger.log(Level.FINE, "bookOpt.isPresent()=true");
-			model.addAttribute("book", bookOpt.get()); // bookをModelに格納
-		}
-		
-		logger.log(Level.INFO, "Get book reviews.");
-		logger.log(Level.FINE, "reviewService.selectAllByBookId(" + bookid + ")");
-		
-		Iterable<Review> reviewList = reviewService.selectAllByBookId(bookid); // 本のRVを取得
-		model.addAttribute("reviewList", reviewList); // reviewListをModelに格納
+		// APIリクエスト実行
+		logger.log(Level.INFO, "GET " + BOOK_API_URL + "/" + bookid + "/detail?user=" + user);
+		ResponseEntity<BookDetail> response = restTemplate.exchange(BOOK_API_URL + "/" + bookid + "/detail?user={user}", HttpMethod.GET, null, BookDetail.class, user);
+		model.addAttribute("book", response.getBody().getBook()); // bookをModelに格納
+		model.addAttribute("reviewList", response.getBody().getReviewList()); // reviewListをModelに格納
 		
 		logger.log(Level.INFO, "return detail.");
 		return "detail";
