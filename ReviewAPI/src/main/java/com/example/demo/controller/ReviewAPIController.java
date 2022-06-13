@@ -44,7 +44,7 @@ public class ReviewAPIController {
 		try {
 			logger.log(Level.INFO, "GET /api/review/?user=" + user + "&bookid=" + bookid);
 			
-			logger.log(Level.INFO, "Get book review of bookid=" + bookid + ".");
+			logger.log(Level.INFO, "Get book review.(bookid=" + bookid + ")");
 			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 			
 			ReviewList reviewList = new ReviewList(); // ReviewListインスタンスを作成
@@ -109,10 +109,11 @@ public class ReviewAPIController {
 	}
 	
 	// RV削除API
-	@DeleteMapping("/api/book/{bookid}/review/{reviewid}")
-	public void deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int bookid, @PathVariable int reviewid) {
+	// 指定したreviewidのRVを削除
+	@DeleteMapping("/api/review/{reviewid}")
+	public void deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int reviewid) {
 		try {
-			logger.log(Level.INFO, "DELETE /api/book/" + bookid + "/review/" + reviewid);
+			logger.log(Level.INFO, "DELETE /api/review/" + reviewid);
 			logger.log(Level.INFO, "user: " + user);
 			
 			logger.log(Level.INFO, "Delete review of reviewid=" + reviewid + ".");
@@ -125,5 +126,25 @@ public class ReviewAPIController {
 		catch (HttpServerErrorException e) {
 			throw e;
 		} 
-	}	
+	}
+	
+	// RV全件削除API
+	// 指定したbookidに紐付くRVを全件削除
+	@DeleteMapping("/api/review/all")
+	public void deleteReviewAll(@RequestParam(value="user", required=false) String user, @RequestParam(value="bookid", required=true) int bookid) {
+		try {
+			logger.log(Level.INFO, "DELETE /api/review/all?bookid=" + bookid);
+			logger.log(Level.INFO, "user: " + user);
+			
+			logger.log(Level.INFO, "Delete all reviews related to bookid = " + bookid + ".");
+			logger.log(Level.FINE, "reviewService.deleteAllByBookId(" + bookid + ")");
+			reviewService.deleteAllByBookId(bookid); // Bookに紐付くReviewを全件削除
+		}
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		} 
+	}
 }

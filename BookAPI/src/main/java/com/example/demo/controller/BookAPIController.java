@@ -6,8 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,10 +18,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.demo.entity.Book;
-import com.example.demo.entity.BookDetail;
 import com.example.demo.entity.BookList;
 import com.example.demo.entity.PostBook;
-import com.example.demo.entity.ReviewList;
 import com.example.demo.service.BookService;
 import com.example.demo.service.ReviewService;
 
@@ -141,35 +137,26 @@ public class BookAPIController {
 		} 
 	}
 	
-	// Book詳細取得API
-	// bookidをリクエストパラメータとして受け取って本の詳細ページを返す
-	@GetMapping("/api/book/{bookid}/detail")
-	public BookDetail getBookDetail(@RequestParam(value="user", required=false) String user, @PathVariable int bookid) {
+	// Book取得API
+	// bookidをリクエストパラメータとして受け取ってBookを返す
+	@GetMapping("/api/book/{bookid}")
+	public Book getBookDetail(@RequestParam(value="user", required=false) String user, @PathVariable int bookid) {
 		try {
-			logger.log(Level.INFO, "GET /api/book/" + bookid + "/detail?user=" + user);
+			logger.log(Level.INFO, "GET /api/book/" + bookid + "?user=" + user);
 			
-			logger.log(Level.INFO, "Get book detail.");
+			logger.log(Level.INFO, "Get book.(bookid=" + bookid + ")");
 			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 			
-			BookDetail bookDetail = new BookDetail();
+			Book book = new Book();
 			
-			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidからBookの詳細情報を取得
+			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidからBookを取得
 			if(bookOpt.isPresent()) {
 				logger.log(Level.FINE, "bookOpt.isPresent()=true");
-				bookDetail.setBook(bookOpt.get());
+				book = bookOpt.get();
 			}
 			
-			logger.log(Level.INFO, "Get book reviews.");
-			logger.log(Level.FINE, "reviewService.selectAllByBookId(" + bookid + ")");
-			
-			// Review APIリクエスト実行
-			logger.log(Level.INFO, "GET " + REVIEW_API_URL + "?user=" + user + "&bookid=" + bookid);
-			ResponseEntity<ReviewList> response = restTemplate.exchange(REVIEW_API_URL + "?user={user}&bookid={bookid}", HttpMethod.GET, null, ReviewList.class, user, bookid);
-			
-			bookDetail.setReviewList(response.getBody().getReviewListPage());
-			
-			logger.log(Level.INFO, "return book detail.");
-			return bookDetail;
+			logger.log(Level.INFO, "return book.");
+			return book;
 		}
 		catch (HttpClientErrorException e) {
 			throw e;
@@ -199,7 +186,7 @@ public class BookAPIController {
 			
 			book = bookService.insertOne(book); // Bookの新規登録
 			
-			logger.log(Level.INFO, "return book user:" + postBook.getUser() + " bookid: " + book.getId());
+			logger.log(Level.INFO, "return book.(user:" + postBook.getUser() + " bookid: " + book.getId() + ")");
 			
 			return book;
 		}
@@ -256,9 +243,9 @@ public class BookAPIController {
 			logger.log(Level.INFO, "DELETE /book/" + bookid);
 			logger.log(Level.INFO, "user: " + user);
 			
-			logger.log(Level.INFO, "Delete all reviews related to bookid =" + bookid + ".");
-			logger.log(Level.FINE, "reviewService.deleteAllByBookId(" + bookid + ")");
-			reviewService.deleteAllByBookId(bookid); // Bookに紐付くReviewを全件削除
+//			logger.log(Level.INFO, "Delete all reviews related to bookid =" + bookid + ".");
+//			logger.log(Level.FINE, "reviewService.deleteAllByBookId(" + bookid + ")");
+//			reviewService.deleteAllByBookId(bookid); // Bookに紐付くReviewを全件削除（RV APIでやるので消す）
 			
 			logger.log(Level.INFO, "Delete book bookid =" + bookid + ".");
 			logger.log(Level.FINE, "bookService.deleteOneById(" + bookid + ")");
