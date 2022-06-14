@@ -1,11 +1,9 @@
 package com.example.demo.controller;
 
-import java.util.Optional;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +22,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.demo.entity.Book;
 import com.example.demo.entity.BookList;
 import com.example.demo.entity.PostBook;
+import com.example.demo.entity.PostReview;
 import com.example.demo.entity.Review;
 import com.example.demo.entity.ReviewList;
-import com.example.demo.service.BookService;
-import com.example.demo.service.ReviewService;
-
 
 @Controller
 @RequestMapping
@@ -36,12 +32,6 @@ public class BookReviewBFFController {
 	final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
 	final String REVIEW_API_URL = "http://127.0.0.1:8083/api/review"; // Review APIのURL
 	
-	// Serviceインスタンスを作成
-	@Autowired
-	BookService bookService;
-	@Autowired
-	ReviewService reviewService;
-
 	// RestTemplateインスタンス作成
 	RestTemplate restTemplate = new RestTemplate();
 	
@@ -110,7 +100,7 @@ public class BookReviewBFFController {
 		} 
 	}	
 	
-	// 本の検索
+	// Book検索
 	// 検索ワードをリクエストパラメータとして受け取って検索結果を返す（page件単位でページ分割した際の指定されたページ分）
 	@GetMapping("/book/search")
 	public String searchBook(@RequestParam(value="user", required=false) String user, @RequestParam(value="keyword", required=false) String keyword, @RequestParam(value="page", defaultValue = "1") int page, RedirectAttributes redirectAttributes, Model model) {
@@ -148,8 +138,8 @@ public class BookReviewBFFController {
 		} 
 	}
 	
-	// 本の詳細画面表示
-	// 書籍IDをリクエストパラメータとして受け取って本の詳細ページを返す
+	// Book詳細画面表示
+	// 書籍IDをリクエストパラメータとして受け取ってBook詳細ページを返す
 	@GetMapping("/book/{bookid}/detail")
 	public String showBook(@RequestParam(value="user", required=false) String user, @PathVariable int bookid, Model model) {
 		try {
@@ -182,7 +172,7 @@ public class BookReviewBFFController {
 		} 
 	}
 	
-	// 本の新規登録画面
+	// Book新規登録画面
 	@GetMapping("/book/newbook")
 	public String newBook(@RequestParam(value="user", required=false) String user, Model model) {
 		logger.log(Level.INFO, "GET /book/newbook?user=" + user);
@@ -196,7 +186,7 @@ public class BookReviewBFFController {
 		return "editbook";
 	}
 	
-	// 本の編集画面
+	// Book編集画面
 	@GetMapping("/book/{bookid}/edit")
 	public String editBook(@RequestParam(value="user", required=false) String user, @PathVariable(value="bookid", required=true) int bookid, Model model) {
 		try {
@@ -226,7 +216,7 @@ public class BookReviewBFFController {
 		}
 	}
 	
-	// 本の情報を新規登録
+	// Book新規登録
 	@PostMapping("/book/insert")
 	public String insert(@RequestParam(value="user", required=false) String user, @RequestParam String title, @RequestParam String overview, Model model) {
 		try {
@@ -264,7 +254,7 @@ public class BookReviewBFFController {
 		} 
 	}
 	
-	// 本の情報を更新
+	// Book更新
 	@PostMapping("/book/{bookid}/update")
 	public String update(@RequestParam(value="user", required=false) String user, @RequestParam String title, @RequestParam String overview, @PathVariable(value="bookid", required=true) int bookid, Model model) {
 		try {
@@ -303,112 +293,127 @@ public class BookReviewBFFController {
 		}
 	}
 	
-	// 本の削除（ToDo:API化）
+	// Book削除
 	@PostMapping("/book/{bookid}/delete")
-	public String deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int bookid, RedirectAttributes redirectAttributes, Model model) {
-		logger.log(Level.INFO, "DELETE /book/" + bookid + "/delete");
-		logger.log(Level.INFO, "user: " + user);
-		
-		model.addAttribute("user", user); // userをModelに格納
-		
-		// Review全件削除API（voidに対して戻り値どのように設定すべき？）
-		logger.log(Level.INFO, "Delete all reviewsrelated to bookid =" + bookid + ".");
-		logger.log(Level.INFO, "DELETE " + REVIEW_API_URL + "/all?user=" + user + "&bookid=" + bookid);
-		ResponseEntity<Review> reviewResponseBook = restTemplate.exchange(REVIEW_API_URL + "/all?user={user}&bookid={bookid}", HttpMethod.DELETE, null, Review.class, user, bookid);
-		
-		// Book削除API（voidに対して戻り値どのように設定すべき？）
-		logger.log(Level.INFO, "Delete book bookid = " + bookid + ".");
-		logger.log(Level.INFO, "DELETE " + BOOK_API_URL + "/" + bookid + "?user=" + user);
-		ResponseEntity<Book> bookResponseBook = restTemplate.exchange(BOOK_API_URL + "/{bookid}?user={user}", HttpMethod.DELETE, null, Book.class, bookid, user);
-		
-		
-		redirectAttributes.addFlashAttribute("complete", "対象の本の削除が完了しました。"); // リダイレクト時のパラメータを設定する（削除完了メッセージ）
-		
-		logger.log(Level.INFO, "redirect:/?user=" + user);
-		return "redirect:/" + "?user=" + user;
+	public String deleteBook(@RequestParam(value="user", required=false) String user, @PathVariable int bookid, RedirectAttributes redirectAttributes, Model model) {
+		try{
+			logger.log(Level.INFO, "DELETE /book/" + bookid + "/delete");
+			logger.log(Level.INFO, "user: " + user);
+			
+			model.addAttribute("user", user); // userをModelに格納
+			
+			// Book削除API
+			logger.log(Level.INFO, "Delete book bookid = " + bookid + ".");
+			logger.log(Level.INFO, "DELETE " + BOOK_API_URL + "/" + bookid + "?user=" + user);
+			ResponseEntity<Void> responseBook = restTemplate.exchange(BOOK_API_URL + "/{bookid}?user={user}", HttpMethod.DELETE, null, Void.class, bookid, user);
+			
+			redirectAttributes.addFlashAttribute("complete", "対象の本の削除が完了しました。"); // リダイレクト時のパラメータを設定する（削除完了メッセージ）
+			
+			logger.log(Level.INFO, "redirect:/?user=" + user);
+			return "redirect:/" + "?user=" + user;
+		}
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		}
 	}
 
-	// RVの新規登録画面（ToDo:API化）
+	// Reviewの新規登録画面
 	@GetMapping("/book/{bookid}/newreview")
 	public String newReview(@RequestParam(value="user", required=false) String user, @PathVariable int bookid, Model model) {
-		logger.log(Level.INFO, "GET /book/" + bookid + "/newreview?user=" + user);
-		
-		model.addAttribute("user", user); // userをModelに格納
-		model.addAttribute("bookid", bookid); // BookのidをModelに格納
-		
-		logger.log(Level.INFO, "Get book.");
-		logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
-		
-		Optional<Book> bookOpt = bookService.selectOneById(bookid); // idをベースにBookを取得
-		if(bookOpt.isPresent()) {
-			model.addAttribute("book", bookOpt.get()); // BookをModelに格納
+		try {
+			logger.log(Level.INFO, "GET /book/" + bookid + "/newreview?user=" + user);
+			
+			model.addAttribute("user", user); // userをModelに格納
+			model.addAttribute("bookid", bookid); // BookのidをModelに格納
+			
+			logger.log(Level.INFO, "Get book.");
+			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
+					
+			// Book取得API実行
+			logger.log(Level.INFO, "GET " + BOOK_API_URL + "/" + bookid + "?user=" + user);
+			ResponseEntity<Book> responseBook = restTemplate.exchange(BOOK_API_URL + "/" + bookid + "?user={user}", HttpMethod.GET, null, Book.class, user);
+			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
+			
+			logger.log(Level.INFO, "return newreview.");
+			return "newreview";
 		}
-		
-		logger.log(Level.INFO, "return newreview.");
-		return "newreview";
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		}
 	}
 	
-	// RVの新規登録（ToDo:API化）
+	// Review新規登録
 	@PostMapping("/review/insert")
 	public String insertReview(@RequestParam(value="user", required=false) String user, @RequestParam int evaluation, @RequestParam String content, @RequestParam int bookid, @RequestParam(defaultValue = "0") int userid, RedirectAttributes redirectAttributes,  Model model) {
-		logger.log(Level.INFO, "POST /review/insert");
-		logger.log(Level.INFO, "user: " + user);
-		logger.log(Level.INFO, "evaluation: " + evaluation);
-		logger.log(Level.INFO, "content: " + content);
-		logger.log(Level.INFO, "bookid: " + bookid);
-		logger.log(Level.INFO, "userid: " + userid);
-		
-		model.addAttribute("user", user); // userをModelに格納
-		
-		logger.log(Level.INFO, "Create Review instance.");
-		Review review = new Review();
-		review.setEvaluation(evaluation);
-		review.setContent(content);
-		review.setBookid(bookid);
-		review.setUserid(userid);
-		
-		logger.log(Level.INFO, "Insert review.");
-		logger.log(Level.FINE, "reviewService.insertOne(" + review + ")");
-		reviewService.insertOne(review); // Reviewを登録
-		
-		logger.log(Level.INFO, "Get reviews of bookid=" + bookid + ".");
-		logger.log(Level.FINE, "reviewService.selectAllByBookId(" + bookid + ")");
-		Iterable<Review> reviewList = reviewService.selectAllByBookId(bookid); // 対象BookのReviewを全て取得
-		
-		// 取得したReviewのevaluationの平均値を算出
-		double totalEvaluation = 0.0;
-		int counter = 0;
-		for(Review tempReview : reviewList) {
-			totalEvaluation += tempReview.getEvaluation();
-			counter ++;
+		try {
+			logger.log(Level.INFO, "POST /review/insert");
+			logger.log(Level.INFO, " user: " + user);
+			logger.log(Level.INFO, " evaluation: " + evaluation);
+			logger.log(Level.INFO, " content: " + content);
+			logger.log(Level.INFO, " bookid: " + bookid);
+			logger.log(Level.INFO, " userid: " + userid);
+			
+			model.addAttribute("user", user); // userをModelに格納
+			
+			logger.log(Level.INFO, "Create PostReview instance.");
+			PostReview postReview = new PostReview();
+			postReview.setEvaluation(evaluation);
+			postReview.setContent(content);
+			postReview.setBookid(bookid);
+			postReview.setUserid(userid);
+			
+			logger.log(Level.INFO, "Insert review.");
+			
+			// Review登録API
+			HttpEntity<PostReview> entity = new HttpEntity<>(postReview, null);
+			logger.log(Level.INFO, "POST " + REVIEW_API_URL + "/insert?user=" + user);
+			ResponseEntity<Review> responseReview = restTemplate.exchange(REVIEW_API_URL + "/insert?user={user}", HttpMethod.POST, entity, Review.class, user);
+			
+			redirectAttributes.addFlashAttribute("complete", "レビューの登録が完了しました。"); // リダイレクト時のパラメータを設定する（登録完了メッセージ）
+			
+			logger.log(Level.INFO, "return redirect:/book/" + bookid + "/detail?user=" + user);
+			return "redirect:/book/" + bookid + "/detail?user=" + user;
 		}
-		
-		logger.log(Level.INFO, "Set totalEvaluation.");
-		logger.log(Level.FINE, "bookService.updateTotalevaluationById(" + bookid + ", " + (double)Math.round(totalEvaluation*10/counter)/10 + ")");
-		bookService.updateTotalevaluationById(bookid, (double)Math.round(totalEvaluation*10/counter)/10); // 対象Bookのtotalevaluationを更新
-		
-		redirectAttributes.addFlashAttribute("complete", "レビューの登録が完了しました！"); // リダイレクト時のパラメータを設定する（登録完了メッセージ）
-		
-		logger.log(Level.INFO, "return redirect:/book/" + bookid + "/detail?user=" + user);
-		return "redirect:/book/" + bookid + "/detail?user=" + user;
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		}
 	}
 	
-	// RVの削除（ToDo:API化）
+	// RVの削除
 	@PostMapping("/book/detail/{bookid}/delete/{reviewid}")
 	public String deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int bookid, @PathVariable int reviewid, RedirectAttributes redirectAttributes, Model model) {
-		logger.log(Level.INFO, "DELETE /book/detail/ + " + bookid + "/delete/" + reviewid);
-		logger.log(Level.INFO, "user: " + user);
-		
-		model.addAttribute("user", user); // userをModelに格納
-		
-		logger.log(Level.INFO, "Delete review of reviewid=" + reviewid + ".");
-		logger.log(Level.FINE, "reviewService.deleteOneById(" + reviewid + ")");
-		reviewService.deleteOneById(reviewid); // idを指定してReviewを削除
-		
-		redirectAttributes.addFlashAttribute("complete", "対象レビューの削除が完了しました。"); // リダイレクト時のパラメータを設定する（登録完了メッセージ）
-		
-		logger.log(Level.INFO, "redirect:/book/" + bookid + "/detail?user=" + user);
-		return "redirect:/book/" + bookid + "/detail?user=" + user;
+		try {
+			logger.log(Level.INFO, "DELETE /book/detail/ + " + bookid + "/delete/" + reviewid);
+			logger.log(Level.INFO, " user: " + user);
+			
+			model.addAttribute("user", user); // userをModelに格納
+			
+			logger.log(Level.INFO, "Delete review of reviewid=" + reviewid + ".");
+			
+			// Review削除API
+			logger.log(Level.INFO, "Delete all reviewsrelated to reviewid =" + reviewid + ".");
+			logger.log(Level.INFO, "DELETE " + REVIEW_API_URL + "/" + reviewid + "?user=" + user);
+			ResponseEntity<Void> reviewResponseBook = restTemplate.exchange(REVIEW_API_URL + "/{reviewid}?user={user}", HttpMethod.DELETE, null, Void.class, reviewid, user);
+			
+			redirectAttributes.addFlashAttribute("complete", "対象レビューの削除が完了しました。"); // リダイレクト時のパラメータを設定する（登録完了メッセージ）
+			
+			logger.log(Level.INFO, "redirect:/book/" + bookid + "/detail?user=" + user);
+			return "redirect:/book/" + bookid + "/detail?user=" + user;
+		}
+		catch (HttpClientErrorException e) {
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			throw e;
+		}
 	}
-	
 }

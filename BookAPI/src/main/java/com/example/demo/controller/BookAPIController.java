@@ -6,6 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,8 +23,6 @@ import com.example.demo.entity.Book;
 import com.example.demo.entity.BookList;
 import com.example.demo.entity.PostBook;
 import com.example.demo.service.BookService;
-import com.example.demo.service.ReviewService;
-
 
 //REST APIを示すアノテーション（戻り値がViewではなくJson/XML）
 @RestController
@@ -39,8 +39,6 @@ public class BookAPIController {
 	// Serviceインスタンスを作成
 	@Autowired
 	BookService bookService;
-	@Autowired
-	ReviewService reviewService;
 	
 	Logger logger = Logger.getLogger(BookAPIController.class.getName());
 	ConsoleHandler handler = new ConsoleHandler();
@@ -203,9 +201,10 @@ public class BookAPIController {
 	public Book update(@RequestBody PostBook postBook, @PathVariable(value="bookid", required=true) int bookid) {		
 		try {
 			logger.log(Level.INFO, "POST /book/" + bookid + "/update");
-			logger.log(Level.INFO, "user: " + postBook.getUser());
-			logger.log(Level.INFO, "title: " + postBook.getTitle());
-			logger.log(Level.INFO, "overview: " + postBook.getOverview());
+			logger.log(Level.INFO, " user: " + postBook.getUser());
+			logger.log(Level.INFO, " title: " + postBook.getTitle());
+			logger.log(Level.INFO, " overview: " + postBook.getOverview());
+			logger.log(Level.INFO, " totalevaluation: " + postBook.getTotalevaluation());
 			
 			Book book = new Book();
 			
@@ -217,8 +216,15 @@ public class BookAPIController {
 				logger.log(Level.INFO, "Update book.");
 				
 				book = bookOpt.get();
-				book.setTitle(postBook.getTitle());
-				book.setOverview(postBook.getOverview());
+				if (postBook.getTitle() != null) {
+					book.setTitle(postBook.getTitle());
+				}
+				if (postBook.getOverview() != null) {
+					book.setOverview(postBook.getOverview());
+				}
+				if (postBook.getTotalevaluation() != 0.0) {
+					book.setTotalevaluation(postBook.getTotalevaluation());
+				}
 				book = bookService.updateOne(book); // Bookの更新
 				
 				logger.log(Level.INFO, "bookid=" + book.getId() + " is updated.");
@@ -242,10 +248,12 @@ public class BookAPIController {
 		try {
 			logger.log(Level.INFO, "DELETE /book/" + bookid);
 			logger.log(Level.INFO, "user: " + user);
-			
-//			logger.log(Level.INFO, "Delete all reviews related to bookid =" + bookid + ".");
-//			logger.log(Level.FINE, "reviewService.deleteAllByBookId(" + bookid + ")");
-//			reviewService.deleteAllByBookId(bookid); // Bookに紐付くReviewを全件削除（RV APIでやるので消す）
+
+			// Reviewもここで消した方が良いか？
+			// Review全件削除API
+			logger.log(Level.INFO, "Delete all reviews related to bookid =" + bookid + ".");
+			logger.log(Level.INFO, "DELETE " + REVIEW_API_URL + "/all?user=" + user + "&bookid=" + bookid);
+			ResponseEntity<Void> responseReview = restTemplate.exchange(REVIEW_API_URL + "/all?user={user}&bookid={bookid}", HttpMethod.DELETE, null, Void.class, user, bookid);
 			
 			logger.log(Level.INFO, "Delete book bookid =" + bookid + ".");
 			logger.log(Level.FINE, "bookService.deleteOneById(" + bookid + ")");

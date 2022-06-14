@@ -4,14 +4,16 @@ public class PostBook {
 	String user; // ユーザー
 	String title; // 本のタイトル
 	String overview; // 本の概要
+	double totalevaluation; // 本の総合評価
 	
 	public PostBook() {
 	}
 	
-	public PostBook(String user, String title, String overview) {
+	public PostBook(String user, String title, String overview, double totalevaluation) {
 		this.user = user;
 		this.title = title;
 		this.overview = overview;
+		this.totalevaluation = totalevaluation;
 	}
 	
 	public String getUser() {
@@ -35,5 +37,13 @@ public class PostBook {
 	
 	public void setOverview(String overview) {
 		this.overview = overview;
+	}
+	
+	public double getTotalevaluation() {
+		return totalevaluation;
+	}
+	
+	public void setTotalevaluation(double totalevaluation) {
+		this.totalevaluation = totalevaluation;
 	}
 }
