@@ -33,20 +33,19 @@ public class ReviewAPIController {
 	
 	final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
 	
-	final int TOP_NUMBER = 10; // トップページの表示件数
-	final int PAGE_SIZE = 10; // 1ページあたりの表示件数
-	
-	// Serviceインスタンスを作成
+	// Service作成
 	@Autowired
 	ReviewService reviewService;
 	
-	// RestTemplateインスタンス作成
+	// RestTemplate作成
 	RestTemplate restTemplate = new RestTemplate();
 	
+	// Logger作成
 	Logger logger = Logger.getLogger(ReviewAPIController.class.getName());
 	ConsoleHandler handler = new ConsoleHandler();
 
-	// RV一覧取得API
+	// Review一覧取得API
+	// リクエストパラメータで指定されたbookidに紐づくReviewを返す
 	@GetMapping("/api/review")
 	public ReviewList getReview(@RequestParam(value="user", required=false) String user, @RequestParam(value="bookid", required=true, defaultValue = "0") int bookid) {
 		try {
@@ -68,7 +67,7 @@ public class ReviewAPIController {
 		} 
 	}
 	
-	// RV新規登録API
+	// RV新規登録API（ToDo: bookidの指定がないときのエラーハンドリングとBook APIエラー時のエラーハンドリング）
 	@PostMapping("/api/review/insert")
 	public Review insertReview(@RequestBody PostReview postReview) {
 		try {
@@ -128,7 +127,7 @@ public class ReviewAPIController {
 		} 
 	}
 	
-	// RV削除API
+	// RV削除API（ToDo: Book APIエラー時のエラーハンドリング）
 	// 指定したreviewidのRVを削除
 	@DeleteMapping("/api/review/{reviewid}")
 	public void deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int reviewid) {

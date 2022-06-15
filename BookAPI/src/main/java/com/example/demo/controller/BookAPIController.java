@@ -242,14 +242,13 @@ public class BookAPIController {
 		} 
 	}
 	
-	// Book削除API
+	// Book削除API（ToDo: Review APIエラー時のエラーハンドリング）
 	@DeleteMapping("/api/book/{bookid}")
 	public void deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int bookid) {
 		try {
 			logger.log(Level.INFO, "DELETE /book/" + bookid);
 			logger.log(Level.INFO, "user: " + user);
 
-			// Reviewもここで消した方が良いか？
 			// Review全件削除API
 			logger.log(Level.INFO, "Delete all reviews related to bookid =" + bookid + ".");
 			logger.log(Level.INFO, "DELETE " + REVIEW_API_URL + "/all?user=" + user + "&bookid=" + bookid);

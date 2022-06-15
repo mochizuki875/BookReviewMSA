@@ -26,6 +26,18 @@
 		</form>
 	</div>
 	
+	<div class="container-fluid pt-3">
+		<div class="row">
+			<!-- 登録/更新完了コメント -->
+			<!-- ${complete}は各メソッドからRedirectパラメーターとして渡される -->
+			<th:block th:if="${complete}">
+				<p  th:text="${complete}" style="color:blue"></p>
+			</th:block>
+			<!-- 表示する書籍の件数を表示（未実装） -->
+			<!-- <p th:if="${bookListSize}" th:text="${bookListSize} + '件の書籍が見つかりました。'"></p> -->
+		</div>
+	</div>
+	
 	<!-- 本の詳細表示 -->
 	<div class="container-fluid pt-3">	
 		<table class="table table-bordered table-responsive">
@@ -52,11 +64,6 @@
 	
 	<div class="container-fluid pt-5">
 		<h2 align="center">この本を読んだ人からのレビュー</h2>
-		
-		<!-- 登録完了コメント -->
-		<th:block th:if="${complete}">
-			<p th:text="${complete}" style="color:blue"></p>
-		</th:block>
 		<!-- RV登録ボタン -->
 		<form class="row" method="GET" th:action="@{/book/{bookid}/newreview(bookid=${book.id})}"> <!-- {bookid}に(bookid=)を代入 -->
 			<div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -87,7 +94,7 @@
 						</td>
 						<!-- RV削除ボタン -->
 						<td th:if="${user} == 'admin'" align="center">
-							<form method="POST" th:action="@{/book/detail/{bookid}/delete/{reviewid}(bookid=${obj.bookid}, reviewid=${obj.id})}"> <!-- {id}に(id=)を代入 -->
+							<form method="POST" th:action="@{/book/{bookid}/review/{reviewid}(bookid=${obj.bookid}, reviewid=${obj.id})}"> <!-- {id}に(id=)を代入 -->
 								<input type="hidden" name="_method" value="DELETE"> <!-- DELETEメソッドを隠しフィールドで送る -->
 								<input type="hidden" name="user" th:value="${user}"> <!-- 隠しフィールドとしてuserを設定しリクエストパラメータとして送信 -->
 								<button type="submit" class="btn btn-secondary">RV削除</button>
@@ -98,8 +105,16 @@
 			</table>
 		</th:block>
 	</div>
-	<!-- レビューが取得できなければメッセージを表示 -->
-	<p th:if="${#lists.isEmpty(reviewList)}">まだ登録されているレビューはありません</p>
+	
+	<div class="container-fluid pt-3">
+		<div class="row">
+			<!-- レビューが取得できなければメッセージを表示 -->
+			<th:block th:if="${#lists.isEmpty(reviewList)}">
+				<p>まだ登録されているレビューはありません</p>
+			</th:block>
+
+		</div>
+	</div>
 	
     <!-- JSとjQueryの読み込み -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
