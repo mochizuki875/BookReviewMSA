@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.entity.Book;
 import com.example.demo.entity.BookList;
@@ -149,19 +151,30 @@ public class BookAPIController {
 			
 			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidからBookを取得
 			if(bookOpt.isPresent()) {
-				logger.log(Level.FINE, "bookOpt.isPresent()=true");
 				book = bookOpt.get();
+				logger.log(Level.INFO, "Return book.");
+				return book;
 			}
 			
-			logger.log(Level.INFO, "return book.");
-			return book;
+			// bookidに対応するBookがなければ404エラー
+			logger.log(Level.SEVERE, "throw  HttpClientErrorException");
+			throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found");
+			
 		}
 		catch (HttpClientErrorException e) {
-			throw e;
+			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとしてthrow
 		}
 		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとしてthrow
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Internal Server Error");
 			throw e;
-		} 
+		}
 	}
 	
 	// Book新規登録API
@@ -170,9 +183,9 @@ public class BookAPIController {
 	public Book insert(@RequestBody PostBook postBook) {
 		try {
 			logger.log(Level.INFO, "POST /book/insert");
-			logger.log(Level.INFO, "user: " + postBook.getUser());
-			logger.log(Level.INFO, "title: " + postBook.getTitle());
-			logger.log(Level.INFO, "overview: " + postBook.getOverview());
+			logger.log(Level.INFO, " user: " + postBook.getUser());
+			logger.log(Level.INFO, " title: " + postBook.getTitle());
+			logger.log(Level.INFO, " overview: " + postBook.getOverview());
 			
 			logger.log(Level.INFO, "Create book instance.");
 			Book book = new Book();
@@ -184,7 +197,7 @@ public class BookAPIController {
 			
 			book = bookService.insertOne(book); // Bookの新規登録
 			
-			logger.log(Level.INFO, "return book.(user:" + postBook.getUser() + " bookid: " + book.getId() + ")");
+			logger.log(Level.INFO, "Return book.(user:" + postBook.getUser() + " bookid: " + book.getId() + ")");
 			
 			return book;
 		}

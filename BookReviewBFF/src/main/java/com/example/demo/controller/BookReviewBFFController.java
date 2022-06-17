@@ -68,11 +68,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -116,11 +116,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -166,11 +166,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -215,15 +215,27 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+				
+				// エラーでも画面表示できるように空のbookをModelに格納
+				Book book = new Book();
+				model.addAttribute("book", book); 
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+				
+				// エラーでも画面表示できるように空のbookをModelに格納
+				Book book = new Book();
+				model.addAttribute("book", book); 
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
 				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				
+				// エラーでも画面表示できるように空のbookをModelに格納
+				Book book = new Book();
+				model.addAttribute("book", book); 
 			}
 			
 			try {
@@ -237,11 +249,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + reviewRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + reviewRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -303,11 +315,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -325,7 +337,7 @@ public class BookReviewBFFController {
 	
 	// Book新規登録
 	@PostMapping("/book/insert")
-	public String insert(@RequestParam(value="user", required=false) String user, @RequestParam String title, @RequestParam String overview, RedirectAttributes redirectAttributes, Model model) {
+	public String insertBook(@RequestParam(value="user", required=false) String user, @RequestParam String title, @RequestParam String overview, RedirectAttributes redirectAttributes, Model model) {
 		try {
 			logger.log(Level.INFO, "POST /book/insert");
 			logger.log(Level.INFO, " user: " + user);
@@ -342,7 +354,7 @@ public class BookReviewBFFController {
 			
 			logger.log(Level.INFO, "Insert book.");
 			
-			bookRequestUrl = BOOK_API_URL + "/insert?user=" + user;
+			bookRequestUrl = BOOK_API_URL + "/insert";
 			
 			try {
 				// Book新規登録API
@@ -362,11 +374,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -387,7 +399,7 @@ public class BookReviewBFFController {
 	
 	// Book更新
 	@PostMapping("/book/{bookid}/update")
-	public String update(@RequestParam(value="user", required=false) String user, @RequestParam String title, @RequestParam String overview, @PathVariable(value="bookid", required=true) int bookid, RedirectAttributes redirectAttributes, Model model) {
+	public String updateBook(@RequestParam(value="user", required=false) String user, @RequestParam String title, @RequestParam String overview, @PathVariable(value="bookid", required=true) int bookid, RedirectAttributes redirectAttributes, Model model) {
 		try {
 			logger.log(Level.INFO, "POST /book/" + bookid + "/update");
 			logger.log(Level.INFO, " user: " + user);
@@ -405,7 +417,7 @@ public class BookReviewBFFController {
 			
 			logger.log(Level.INFO, "Update book.");
 			
-			bookRequestUrl = BOOK_API_URL + "/" + bookid + "/update?user=" + user;
+			bookRequestUrl = BOOK_API_URL + "/" + bookid + "/update";
 			
 			try {
 				// APIリクエスト実行
@@ -425,11 +437,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -472,11 +484,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "DELETE " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "DELETE " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -521,11 +533,11 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			}
 			catch (Exception e) {
 				logger.log(Level.SEVERE, "Catch Exception");
@@ -559,6 +571,7 @@ public class BookReviewBFFController {
 			
 			logger.log(Level.INFO, "Create PostReview instance.");
 			PostReview postReview = new PostReview();
+			postReview.setUser(user);
 			postReview.setEvaluation(evaluation);
 			postReview.setContent(content);
 			postReview.setBookid(bookid);
@@ -566,7 +579,7 @@ public class BookReviewBFFController {
 			
 			logger.log(Level.INFO, "Insert Review.");
 			
-			reviewRequestUrl = REVIEW_API_URL + "/insert?user=" + user;
+			reviewRequestUrl = REVIEW_API_URL + "/insert";
 			
 			try {
 				// Review登録API
@@ -581,12 +594,12 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + reviewRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 				redirectAttributes.addFlashAttribute("complete", "レビューの登録に失敗しました。"); // リダイレクト時のパラメータを設定する（登録失敗メッセージ）
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + reviewRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 				redirectAttributes.addFlashAttribute("complete", "レビューの登録に失敗しました。"); // リダイレクト時のパラメータを設定する（登録失敗メッセージ）
 			}
 			catch (Exception e) {
@@ -627,12 +640,12 @@ public class BookReviewBFFController {
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "DELETE " + reviewRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 				redirectAttributes.addFlashAttribute("complete", "レビューの削除に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
 			}
 			catch (HttpServerErrorException e) {
 				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Unable access to " + "DELETE " + reviewRequestUrl);
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 				redirectAttributes.addFlashAttribute("complete", "レビューの削除に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
 			}
 			catch (Exception e) {
