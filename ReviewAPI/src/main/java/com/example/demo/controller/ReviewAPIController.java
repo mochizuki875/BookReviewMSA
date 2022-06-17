@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -123,12 +124,12 @@ public class ReviewAPIController {
 		catch (HttpClientErrorException e) {
 			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
 			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとして400系をthrow
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad Request."); // restControllerのレスポンスコードとして400をthrow
 		}
 		catch (HttpServerErrorException e) {
 			logger.log(Level.SEVERE, "Catch HttpServerErrorException");
 			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとして500系をthrow
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error."); // restControllerのレスポンスコードとして500をthrow
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Catch Exception");
@@ -177,12 +178,14 @@ public class ReviewAPIController {
 		catch (HttpClientErrorException e) {
 			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
 			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとして400系をthrow
+			// throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとして400系をthrow
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad Request."); // restControllerのレスポンスコードとして400をthrow
 		}
 		catch (HttpServerErrorException e) {
 			logger.log(Level.SEVERE, "Catch HttpServerErrorException");
 			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとして500系をthrow
+			// throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとして500系をthrow
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error."); // restControllerのレスポンスコードとして500をthrow
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Catch Exception");
@@ -208,6 +211,8 @@ public class ReviewAPIController {
 			throw e;
 		}
 	}
+	
+	
 	
 	// bookidに紐付くReviewからtotalreviewを算出するメソッド
 	double calcTotalevaluation(int bookid) {

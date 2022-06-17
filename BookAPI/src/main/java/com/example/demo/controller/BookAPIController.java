@@ -158,7 +158,7 @@ public class BookAPIController {
 			
 			// bookidに対応するBookがなければ404エラー
 			logger.log(Level.SEVERE, "throw  HttpClientErrorException");
-			throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found");
+		    throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found");
 			
 		}
 		catch (HttpClientErrorException e) {
