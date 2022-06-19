@@ -26,6 +26,7 @@ import com.example.demo.entity.PostBook;
 import com.example.demo.entity.PostReview;
 import com.example.demo.entity.Review;
 import com.example.demo.entity.ReviewList;
+import com.example.demo.entity.TotalEvaluation;
 
 @Controller
 @RequestMapping
@@ -199,10 +200,9 @@ public class BookReviewBFFController {
 			
 			model.addAttribute("user", user); // userをModelに格納
 			
-			logger.log(Level.INFO, "Get Book and ReviewList.");
+			logger.log(Level.INFO, "Get Book.");
 
 			bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
-			reviewRequestUrl = REVIEW_API_URL + "?user=" + user + "&bookid=" + bookid;
 			
 			try {
 			// Book取得API
@@ -238,14 +238,18 @@ public class BookReviewBFFController {
 				model.addAttribute("book", book); 
 			}
 			
-			try {
-			// Review一覧取得API
-			logger.log(Level.INFO, "[Review API] Request to Review API.");
-			logger.log(Level.INFO, "[Review API] GET " + reviewRequestUrl);
-			ResponseEntity<ReviewList> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.GET, null, ReviewList.class);
-			logger.log(Level.INFO, "[Review API] ReviewList has returned from Review API.");
+			logger.log(Level.INFO, "Get ReviewList.");
+
+			reviewRequestUrl = REVIEW_API_URL + "?user=" + user + "&bookid=" + bookid;
 			
-			model.addAttribute("reviewList", responseReview.getBody().getReviewListPage()); // reviewListをModelに格納
+			try {
+				// Review一覧取得API
+				logger.log(Level.INFO, "[Review API] Request to Review API.");
+				logger.log(Level.INFO, "[Review API] GET " + reviewRequestUrl);
+				ResponseEntity<ReviewList> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.GET, null, ReviewList.class);
+				logger.log(Level.INFO, "[Review API] ReviewList has returned from Review API.");
+			
+				model.addAttribute("reviewList", responseReview.getBody().getReviewListPage()); // reviewListをModelに格納
 			}
 			catch (HttpClientErrorException e) {
 				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
@@ -260,6 +264,31 @@ public class BookReviewBFFController {
 				logger.log(Level.SEVERE, "Unable access to " + "GET " + reviewRequestUrl);
 			}
 			
+			logger.log(Level.INFO, "Get TotalEvaluation.");
+			
+			reviewRequestUrl = REVIEW_API_URL + "/totalevaluation?user=" + user + "&bookid=" + bookid;
+			
+			try {
+				// TotalEvaluation取得API
+				logger.log(Level.INFO, "[Review API] Request to Review API.");
+				logger.log(Level.INFO, "[Review API] GET " + reviewRequestUrl);
+				ResponseEntity<TotalEvaluation> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.GET, null, TotalEvaluation.class);
+				logger.log(Level.INFO, "[Review API] TotalEvaluation has returned from Review API.");
+			
+				model.addAttribute("totalEvaluation", responseReview.getBody().getValue()); // reviewListをModelに格納
+			}
+			catch (HttpClientErrorException e) {
+				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			}
+			catch (HttpServerErrorException e) {
+				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			}
+			catch (Exception e) {
+				logger.log(Level.SEVERE, "Catch Exception");
+				logger.log(Level.SEVERE, "Unable access to " + "GET " + reviewRequestUrl);
+			}
 			logger.log(Level.INFO, "Return book page and show reviewList. (bookid = " + bookid + ")");
 			return "detail";
 		}
@@ -662,4 +691,100 @@ public class BookReviewBFFController {
 			throw e;
 		} 
 	}
+	
+	
+	
+	// Book取得API実行メソッド
+	// [Book API] GET /api/book/{bookid}
+	ResponseEntity<Book> getBookApi(String user, int bookid) {
+		String bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
+	
+		try {
+			// Book取得API
+			logger.log(Level.INFO, "[Book API] Request to Book API.");
+			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
+			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, Book.class);
+			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
+			
+			return responseBook;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Catch Exception");
+			logger.log(Level.SEVERE, "[Book API] Unable access to " + "GET " + bookRequestUrl);
+			throw e;
+		}
+	}
+	
+	// Book更新API実行メソッド
+	// [Book API] POST /api/book/{bookid}/update
+	ResponseEntity<Book> postBookUpdateApi(String user, int bookid, PostBook postBook) {
+		String bookRequestUrl = BOOK_API_URL + "/" + bookid + "/update";
+		
+		try {
+			// Book更新API実行
+			HttpEntity<PostBook> entity = new HttpEntity<>(postBook, null);
+			
+			logger.log(Level.INFO, "[Book API] Request to Book API.");
+			logger.log(Level.INFO, "[Book API] POST " + bookRequestUrl);
+			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.POST, entity, Book.class);
+			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
+			
+			return responseBook;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Catch Exception");
+			logger.log(Level.SEVERE, "[Book API] Unable access to " + "POST " + bookRequestUrl);
+			throw e;
+		}
+	}
+	
+	// Review一覧取得API実行メソッド
+	
+	
+	
+	// TotalEvaluation取得API実行メソッド
+	// [Review API] GET /api/review/totalevaluation
+	ResponseEntity<TotalEvaluation> getReviewTotalEvaluationApi(String user, int bookid){
+		String reviewRequestUrl = REVIEW_API_URL + "/totalevaluation?user=" + user + "&bookid=" + bookid;
+		
+		try {
+			// TotalEvaluation取得API実行
+			logger.log(Level.INFO, "[Review API] Request to Review API.");
+			logger.log(Level.INFO, "[Review API] GET " + reviewRequestUrl);
+			ResponseEntity<TotalEvaluation> responseBook = restTemplate.exchange(reviewRequestUrl, HttpMethod.GET, null, TotalEvaluation.class);
+			logger.log(Level.INFO, "[Review API] TotalEvaluation has returned from Review API.");
+			
+			return responseBook;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Review API] Catch  HttpClientErrorException");
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Review API] Catch HttpServerErrorException");
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Review API] Catch Exception");
+			logger.log(Level.SEVERE, "[Review API] Unable access to " + "POST " + reviewRequestUrl);
+			throw e;
+		}	
+	}
+	
 }

@@ -63,7 +63,6 @@ public class ReviewAPIController {
 			
 			ReviewList reviewList = new ReviewList(); // ReviewListインスタンスを作成
 			reviewList.setReviewListPage(reviewService.selectAllByBookId(bookid)); // Review一覧を取得
-			logger.log(Level.INFO, "ReviewList has returned.");
 			logger.log(Level.INFO, "Return ReviewList.");
 			
 			return reviewList; 
