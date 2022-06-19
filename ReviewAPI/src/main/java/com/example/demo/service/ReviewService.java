@@ -6,18 +6,18 @@ import com.example.demo.entity.Review;
 
 public interface ReviewService {
 
-	// RVのIDを指定してRVを1件取得
+	// ReviewのIDを指定してRVを1件取得
 	Optional<Review> selectOneById(int id);
 	
-	// RVのIDを指定してRVを1件削除
+	// Reviewを指定してReviewを1件削除
 	void deleteOneById(int id);
 
-	// RVを1件登録
+	// Reviewを1件登録
 	void insertOne(Review review);
 	
-	// 本のIDを指定してRVを全件取得
+	// bookidを指定してReviewを全件取得
 	 Iterable<Review> selectAllByBookId(int bookid);
 			
-	// 本のIDを指定してRVを全件削除（本のIDに紐付くもの全て）
+	// bookidを指定してReviewを全件削除（bookidに紐付くもの全て）
 	 void deleteAllByBookId(int bookid);
 }
