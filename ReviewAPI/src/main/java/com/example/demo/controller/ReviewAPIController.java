@@ -107,14 +107,30 @@ public class ReviewAPIController {
 			reviewService.insertOne(review);
 			logger.log(Level.INFO, "Review has inserted.");
 
-			// 対象bookidのtotalevaluationを算出
-			logger.log(Level.INFO, "Calculate totalEvaluation of bookid=" + bookid + ".");
-			TotalEvaluation totalEvaluation = new TotalEvaluation(review.getBookid(), calcTotalevaluation(review.getBookid()));
+//			// 対象bookidのtotalevaluationを算出
+//			logger.log(Level.INFO, "Calculate totalEvaluation of bookid=" + bookid + ".");
+//			TotalEvaluation totalEvaluation = new TotalEvaluation(review.getBookid(), calcTotalevaluation(review.getBookid()));
 			
-			// bookidに対応するTotalEvaluationを更新
-			logger.log(Level.INFO, "UPSERT totalEvaluation.(bookid=" +totalEvaluation.getBookid() + " value=" + totalEvaluation.getValue() + ")");
-			totalEvaluationService.upsertOne(totalEvaluation);
-			logger.log(Level.INFO, "TotalEvaluation has upserted.");
+			// 対象bookidのtotalevaluationを算出
+			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
+			double totalevaluation = calcTotalevaluation(review.getBookid());
+			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
+			
+//			// bookidに対応するTotalEvaluationを更新
+//			logger.log(Level.INFO, "UPSERT totalEvaluation.(bookid=" +totalEvaluation.getBookid() + " value=" + totalEvaluation.getValue() + ")");
+//			totalEvaluationService.upsertOne(totalEvaluation);
+//			logger.log(Level.INFO, "TotalEvaluation has upserted.");
+			
+			// bookidに対応するBookのtotalevaluationを更新
+			logger.log(Level.INFO, "Create PostBook instance.");
+			PostBook postBook = new PostBook();
+			postBook.setUser(user);
+			postBook.setTotalevaluation(totalevaluation);
+			
+			// Book更新API実行メソッド
+			logger.log(Level.INFO, "Update Book totalevaluation.(bookid = " + bookid + ")");
+			responseBook = postBookApi(user, bookid, postBook);
+			
 			
 			return review;
 		}
@@ -156,14 +172,29 @@ public class ReviewAPIController {
 			reviewService.deleteOneById(reviewid); 
 			logger.log(Level.INFO, "Review of reviewid=" + reviewid + " has deleted.");
 	
+//			// 対象bookidのtotalevaluationを算出
+//			logger.log(Level.INFO, "Calculate totalEvaluation of bookid=" + bookid + ".");
+//			TotalEvaluation totalEvaluation = new TotalEvaluation(bookid, calcTotalevaluation(bookid));
+
 			// 対象bookidのtotalevaluationを算出
-			logger.log(Level.INFO, "Calculate totalEvaluation of bookid=" + bookid + ".");
-			TotalEvaluation totalEvaluation = new TotalEvaluation(bookid, calcTotalevaluation(bookid));
+			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
+			double totalevaluation = calcTotalevaluation(bookid);
+			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
 			
-			// bookidに対応するTotalEvaluationを更新
-			logger.log(Level.INFO, "UPSERT totalEvaluation.(bookid=" +totalEvaluation.getBookid() + " value=" + totalEvaluation.getValue() + ")");
-			totalEvaluationService.upsertOne(totalEvaluation);
-			logger.log(Level.INFO, "TotalEvaluation has upserted.");
+//			// bookidに対応するTotalEvaluationを更新
+//			logger.log(Level.INFO, "UPSERT totalEvaluation.(bookid=" +totalEvaluation.getBookid() + " value=" + totalEvaluation.getValue() + ")");
+//			totalEvaluationService.upsertOne(totalEvaluation);
+//			logger.log(Level.INFO, "TotalEvaluation has upserted.");
+
+			// bookidに対応するBookのtotalevaluationを更新
+			logger.log(Level.INFO, "Create PostBook instance.");
+			PostBook postBook = new PostBook();
+			postBook.setUser(user);
+			postBook.setTotalevaluation(totalevaluation);
+			
+			// Book更新API実行メソッド
+			logger.log(Level.INFO, "Update Book totalevaluation.(bookid = " + bookid + ")");
+			responseBook = postBookApi(user, bookid, postBook);
 		}
 		catch (HttpClientErrorException e) {
 			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");

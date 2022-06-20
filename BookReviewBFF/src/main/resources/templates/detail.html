@@ -53,11 +53,11 @@
 					<!-- 評価をスター表示 -->
 					<td class="text-center">
 						<div class="row">
-							<input class="show-rating rating-loading" name="rate" th:value="${totalEvaluation}">
-							<th:block th:if="!(${totalEvaluation} == null)">
-								<label class="col" th:text="'(' + ${totalEvaluation} + ')'"></label>
+							<input class="show-rating rating-loading" name="rate" th:value="${book.totalevaluation}">
+							<th:block th:if="!(${book.totalevaluation} == null)">
+								<label class="col" th:text="'(' + ${book.totalevaluation} + ')'"></label>
 							</th:block>
-							<th:block th:if="${totalEvaluation} == null">
+							<th:block th:if="${book.totalevaluation} == null">
 								<label class="col" th:text="'(-)'"></label>
 							</th:block>
 						</div>
