@@ -13,7 +13,7 @@ public interface BookService {
 	// 上位n件のbookを取得
 	Iterable<Book> selectTopN(int n);
 	
-	// Bookをoffset単位で分割表示する際のページ数を取得
+	// Bookをoffset単位で分割表示する際のページ数を取得(★ToDo:offsetではなくlimit)
 	int countAllPages(int offset);
 	
 	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
@@ -23,10 +23,9 @@ public interface BookService {
 	Optional<Book> selectOneById(int id);
 	
 	// 登録されている全Bookをkeywordで検索した結果をlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
-	// Iterable<Book> searchAll(String keyword);
 	Iterable<Book> searchAllDescByPage(String keyword, int page, int limit);
 	
-	// // Bookのkeyword検索結果をoffset単位で分割表示する際のページ数を取得
+	// Bookのkeyword検索結果をoffset単位で分割表示する際のページ数を取得
 	int countSearchAllPages(String keyword, int offset);
 	
 	// Bookを1件登録して登録されたBookを返す

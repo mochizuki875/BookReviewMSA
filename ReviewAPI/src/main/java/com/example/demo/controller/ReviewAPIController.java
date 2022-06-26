@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,20 +29,20 @@ import com.example.demo.entity.Review;
 import com.example.demo.entity.ReviewList;
 import com.example.demo.entity.TotalEvaluation;
 import com.example.demo.service.ReviewService;
-import com.example.demo.service.TotalEvaluationService;
 
 
 //REST APIを示すアノテーション（戻り値がViewではなくJson/XML）
 @RestController
 public class ReviewAPIController {
 	
+	final int TOP_NUMBER = 10; // トップページの表示件数
+	final int PAGE_SIZE = 10; // 1ページあたりの表示件数
+	
 	final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
 	
 	// Service作成
 	@Autowired
 	ReviewService reviewService;
-	@Autowired
-	TotalEvaluationService totalEvaluationService;
 	
 	// RestTemplate作成
 	RestTemplate restTemplate = new RestTemplate();
@@ -106,20 +106,11 @@ public class ReviewAPIController {
 			logger.log(Level.FINE, "reviewService.insertOne(" + review + ")");
 			reviewService.insertOne(review);
 			logger.log(Level.INFO, "Review has inserted.");
-
-//			// 対象bookidのtotalevaluationを算出
-//			logger.log(Level.INFO, "Calculate totalEvaluation of bookid=" + bookid + ".");
-//			TotalEvaluation totalEvaluation = new TotalEvaluation(review.getBookid(), calcTotalevaluation(review.getBookid()));
 			
 			// 対象bookidのtotalevaluationを算出
 			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
 			double totalevaluation = calcTotalevaluation(review.getBookid());
 			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
-			
-//			// bookidに対応するTotalEvaluationを更新
-//			logger.log(Level.INFO, "UPSERT totalEvaluation.(bookid=" +totalEvaluation.getBookid() + " value=" + totalEvaluation.getValue() + ")");
-//			totalEvaluationService.upsertOne(totalEvaluation);
-//			logger.log(Level.INFO, "TotalEvaluation has upserted.");
 			
 			// bookidに対応するBookのtotalevaluationを更新
 			logger.log(Level.INFO, "Create PostBook instance.");
@@ -171,20 +162,11 @@ public class ReviewAPIController {
 			logger.log(Level.FINE, "reviewService.deleteOneById(" + reviewid + ")");
 			reviewService.deleteOneById(reviewid); 
 			logger.log(Level.INFO, "Review of reviewid=" + reviewid + " has deleted.");
-	
-//			// 対象bookidのtotalevaluationを算出
-//			logger.log(Level.INFO, "Calculate totalEvaluation of bookid=" + bookid + ".");
-//			TotalEvaluation totalEvaluation = new TotalEvaluation(bookid, calcTotalevaluation(bookid));
 
 			// 対象bookidのtotalevaluationを算出
 			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
 			double totalevaluation = calcTotalevaluation(bookid);
 			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
-			
-//			// bookidに対応するTotalEvaluationを更新
-//			logger.log(Level.INFO, "UPSERT totalEvaluation.(bookid=" +totalEvaluation.getBookid() + " value=" + totalEvaluation.getValue() + ")");
-//			totalEvaluationService.upsertOne(totalEvaluation);
-//			logger.log(Level.INFO, "TotalEvaluation has upserted.");
 
 			// bookidに対応するBookのtotalevaluationを更新
 			logger.log(Level.INFO, "Create PostBook instance.");
@@ -228,53 +210,43 @@ public class ReviewAPIController {
 			reviewService.deleteAllByBookId(bookid); 
 			logger.log(Level.INFO, "All reviews related to bookid = " + bookid + " has deleted.");
 			
-			// Bookに紐付くTotalEvaluationを削除
-			logger.log(Level.INFO, "Delete TotalEvaluation related to bookid = " + bookid + ".");
-			logger.log(Level.FINE, "totalEvaluation.deleteOneById(" + bookid + ")");
-			totalEvaluationService.deleteOneById(bookid); 
-			logger.log(Level.INFO, "TotalEvaluation related to bookid = " + bookid + " has deleted.");
 		}
 		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		}
 	}
 	
 	// TotalEvaluation取得API
+	// 対象のbookidを配列で受け取る
 	@GetMapping("/api/review/totalevaluation")
-	public TotalEvaluation selectTotalEvaluationById(@RequestParam(value="user", required=false) String user, @RequestParam(value="bookid", required=true) int bookid) {
+	public Iterable<TotalEvaluation> getTotalEvaluation(@RequestParam(value="user", required=false) String user, @RequestParam(value="page", required=false, defaultValue = "0") int page, @RequestParam(value="bookids[]", required=false) List<Integer> bookids){
 		try {
-			logger.log(Level.INFO, "GET /api/review/totalevaluation?user=" + user + "&bookid=" + bookid);
-			
-			Optional<TotalEvaluation> totalEvaluationOpt = totalEvaluationService.selectOneById(bookid);
-			
-			if(totalEvaluationOpt.isPresent()) {
-				TotalEvaluation totalEvaluation = totalEvaluationOpt.get();
-				logger.log(Level.INFO, "Return TotalEvaluation");
-				return totalEvaluation;
+			if(bookids == null) { // bookidがパラメータで指定されていない場合
+				if (page != 0 ) { // 指定されたpageの結果を返す
+					logger.log(Level.INFO, "GET /api/review/tolalevaluation?user=" + user + "&page=" + page);
+					return reviewService.selectTotalEvaluationDescByLimitOffset(page, PAGE_SIZE);
+				} else { // 上位N件を返す
+					logger.log(Level.INFO, "GET /api/review/tolalevaluation?user=" + user);
+					return reviewService.selectTotalEvaluationTopN(TOP_NUMBER);
+				}
+			} else { // bookidが指定されたら該当するTotalEvaluationを返す
+				logger.log(Level.INFO, "GET /api/review/tolalevaluation?user=" + user + "&bookid[]=" + bookids);
+				return reviewService.selectTotalEvaluationByBookId(bookids);
 			}
-			// bookidに対応するTotalEvaluationがなければ404エラー
-			logger.log(Level.SEVERE, "throw  HttpClientErrorException");
-		    throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found");
-		}
-		catch (HttpClientErrorException e) {
-			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとしてthrow
-		}
-		catch (HttpServerErrorException e) {
-			logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとしてthrow
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "[Book API] Internal Server Error");
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		}
 	}
 	
 	
 	
-	
+	// -------------------
+		
 	// bookidに紐付くReviewからtotalreviewを算出するメソッド
 	double calcTotalevaluation(int bookid) {
 		logger.log(Level.INFO, "Get reviews of bookid=" + bookid + ".");

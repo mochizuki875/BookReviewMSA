@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.entity.Review;
+import com.example.demo.entity.TotalEvaluation;
 import com.example.demo.repository.ReviewRepository;
 
 @Service
@@ -62,4 +64,35 @@ public class ReviewServiceImpl implements ReviewService {
 		reviewRepository.deleteAllByBookid(bookid);
 	}
 	
+	// 指定したbookidのTotalEvaluationを取得
+	public Iterable<TotalEvaluation> selectTotalEvaluationByBookId(List<Integer> bookids){
+		logger.log(Level.FINER, "selectTotalEvaluationByBookId(" + bookids + ")");
+		logger.log(Level.FINER, "reviewRepository.findTotalEvaluationByBookId(" + bookids + ")");
+		return reviewRepository.findTotalEvaluationByBookId(bookids);
+	}
+
+	// 上位n件のTotalEvaluationを取得
+	@Override
+	public Iterable<TotalEvaluation> selectTotalEvaluationTopN(int n) {
+		logger.log(Level.FINER, "selectTopN(" + n + ")");
+		logger.log(Level.FINER, "bookRepository.selectTotalEvaluationTopN(" + n + ")");
+		return reviewRepository.selectTotalEvaluationTopN(n);
+	}
+	 
+	// TotalEvaluationをlimit単位で分割取得する際のページ数を取得
+	
+	
+	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
+//	@Override
+//	public Iterable<Book> selectAllDescByPage(int page, int limit) {
+//		logger.log(Level.FINER, "selectAllDescByPage(" + page + ", " + limit + ")");
+//		logger.log(Level.FINER, "bookRepository.selectAllDescByLimitOffset(" + limit + ", " + limit*(page-1) + ")");
+//		return bookRepository.selectAllDescByLimitOffset(limit, limit*(page-1));
+//	}
+	 
+	// 登録されている全ReviewからTotalEvaluationを算出したものをlimit単位でページ分割し、指定したpageに含まれるTotalEvaluation一覧を取得	
+	@Override
+	public Iterable<TotalEvaluation> selectTotalEvaluationDescByLimitOffset(int page, int limit){
+		return reviewRepository.selectTotalEvaluationDescByLimitOffset(limit, limit*(page-1));
+	}
 }

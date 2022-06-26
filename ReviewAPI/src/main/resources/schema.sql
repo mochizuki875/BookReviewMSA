@@ -5,8 +5,3 @@ CREATE TABLE review (
     bookid INTEGER NOT NULL,
     userid INTEGER NOT NULL
 );
-
-CREATE TABLE totalevaluation (
-    bookid INTEGER NOT NULL UNIQUE,
-	totalevaluation DOUBLE PRECISION NOT NULL DEFAULT 0
-);

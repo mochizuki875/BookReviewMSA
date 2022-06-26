@@ -1,16 +1,7 @@
 package com.example.demo.entity;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
-
-// totalevaluationテーブル用のエンティティ
-@Table("totalevaluation")
 public class TotalEvaluation {
-	@Id
-	@Column("bookid")
-	private int bookid; // 主キー
-	@Column("value")
+	private int bookid;
 	private double value = 0; // totalevaluation（1~5）
 	
 	public TotalEvaluation() {
