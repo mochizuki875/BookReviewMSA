@@ -1,7 +1,6 @@
 package com.example.demo.entity;
 
 public class BookList {
-
 	Iterable<Book> bookListPage;
 	int page;
 	int allPages;

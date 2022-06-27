@@ -102,7 +102,7 @@ public class ReviewAPIController {
 			review.setUserid(postReview.getUserid());
 			
 			// Reviewを登録
-			logger.log(Level.INFO, "Insert review.");
+			logger.log(Level.INFO, "Insert Review.");
 			logger.log(Level.FINE, "reviewService.insertOne(" + review + ")");
 			reviewService.insertOne(review);
 			logger.log(Level.INFO, "Review has inserted.");
@@ -122,7 +122,7 @@ public class ReviewAPIController {
 			logger.log(Level.INFO, "Update Book totalevaluation.(bookid = " + bookid + ")");
 			responseBook = postBookApi(user, bookid, postBook);
 			
-			
+			logger.log(Level.INFO, "Return Review.(reviewid = " + review.getId() + ")");
 			return review;
 		}
 		catch (HttpClientErrorException e) {
@@ -147,8 +147,7 @@ public class ReviewAPIController {
 	@DeleteMapping("/api/review/{reviewid}")
 	public void deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int reviewid) {
 		try {
-			logger.log(Level.INFO, "DELETE /api/review/" + reviewid);
-			logger.log(Level.INFO, "user: " + user);
+			logger.log(Level.INFO, "DELETE /api/review/" + reviewid + "?user=" + user);
 			
 			int bookid =reviewService.selectOneById(reviewid).get().getBookid(); // 削除対象Reviewのbookidを取得
 			
@@ -218,7 +217,7 @@ public class ReviewAPIController {
 		}
 	}
 	
-	// TotalEvaluation取得API
+	// TotalEvaluation取得API（今は使っていない）
 	// 対象のbookidを配列で受け取る
 	@GetMapping("/api/review/totalevaluation")
 	public Iterable<TotalEvaluation> getTotalEvaluation(@RequestParam(value="user", required=false) String user, @RequestParam(value="page", required=false, defaultValue = "0") int page, @RequestParam(value="bookids[]", required=false) List<Integer> bookids){
@@ -249,7 +248,7 @@ public class ReviewAPIController {
 		
 	// bookidに紐付くReviewからtotalreviewを算出するメソッド
 	double calcTotalevaluation(int bookid) {
-		logger.log(Level.INFO, "Get reviews of bookid=" + bookid + ".");
+		logger.log(Level.INFO, "Get Reviews of bookid=" + bookid + ".");
 		logger.log(Level.FINE, "reviewService.selectAllByBookId(" + bookid + ")");
 		Iterable<Review> reviewList = reviewService.selectAllByBookId(bookid); // 対象BookのReviewを全て取得
 		

@@ -46,7 +46,7 @@ public class BookAPIController {
 	ConsoleHandler handler = new ConsoleHandler();
 	
 	// Book一覧取得API
-	// 登録されているBook一覧を取得するAPI
+	// 登録されているBook一覧を取得する
 	@GetMapping("/api/book")
 	public BookList getBook(@RequestParam(value="user", required=false) String user, @RequestParam(value="page", required=false, defaultValue = "0") int page) {
 		try {
@@ -65,7 +65,7 @@ public class BookAPIController {
 				Iterable<Book> bookListPage = bookService.selectAllDescByPage(page, PAGE_SIZE); // 指定したページのBook情報一覧を取得
 				bookList.setBookListPage(bookListPage);
 				
-				logger.log(Level.INFO, "return bookList.");
+				logger.log(Level.INFO, "Return BookList.");
 				return bookList;
 				
 			} else { // pageが指定されていない or page=0の場合
@@ -80,17 +80,16 @@ public class BookAPIController {
 				bookList.setAllPages(1); // レスポンス用インスタンスにallPageを格納
 				bookList.setBookListPage(bookListPage); // レスポンス用インスタンスにbookListPageを格納
 				
-				logger.log(Level.INFO, "return bookList.");
+				logger.log(Level.INFO, "Return bookList.");
 				
 				return bookList;
 			}
 		}
-		catch (HttpClientErrorException e) {
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		}
-		catch (HttpServerErrorException e) {
-			throw e;
-		} 
 	}
 	
 	// Book検索API
@@ -102,18 +101,22 @@ public class BookAPIController {
 			logger.log(Level.INFO, "GET /api/book/search?user=" + user + "&keyword=" + keyword + "&page=" + page);
 			BookList bookList = new BookList();
 			
-			if(keyword == null | keyword == "") { 
-				logger.log(Level.INFO, "return home.");
-				Iterable<Book> bookListPage = bookService.selectTopN(TOP_NUMBER); // Book情報のうち上位TOP_NUMBER件を件取得
+			if(keyword == null | keyword == "") { // keywordが指定されていなければ上位TOP_NUMBER件を取得する
+				logger.log(Level.INFO, "keyword=" + keyword);
+				logger.log(Level.INFO, "Get bookList of top " + TOP_NUMBER + ".");
+				logger.log(Level.FINE, "bookService.selectTopN(" + TOP_NUMBER + ")");
+				
+				Iterable<Book> bookListPage = bookService.selectTopN(TOP_NUMBER); // Book情報のうち上位TOP_NUMBER件を取得する
 				bookList.setPage(1);
 				bookList.setAllPages(1);
 				bookList.setBookListPage(bookListPage);
 				
-				logger.log(Level.INFO, "Get bookList of top " + TOP_NUMBER + ".");
-				logger.log(Level.FINE, "bookService.selectTopN(" + TOP_NUMBER + ")");
+				logger.log(Level.INFO, "Return BookList.");
 				
 				return bookList;
 			} else { // keywordが指定されている場合は検索結果のうちpage/PAGE_SIZEのBook一覧を取得する
+				logger.log(Level.INFO, "keyword=" + keyword);
+				
 				bookList.setPage(page);
 				
 				int allPages = bookService.countSearchAllPages(keyword, PAGE_SIZE); // 検索結果の全ページ数を取得
@@ -125,16 +128,15 @@ public class BookAPIController {
 				Iterable<Book> bookListPage = bookService.searchAllDescByPage(keyword, page, PAGE_SIZE); // keyword検索結果のうち指定したページのBook情報一覧を取得
 				bookList.setBookListPage(bookListPage);
 				
-				logger.log(Level.INFO, "return bookList.");
+				logger.log(Level.INFO, "Return BookList.");
 				return bookList;
 			}
 		}
-		catch (HttpClientErrorException e) {
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		}
-		catch (HttpServerErrorException e) {
-			throw e;
-		} 
 	}
 	
 	// Book取得API
@@ -143,16 +145,13 @@ public class BookAPIController {
 	public Book getBookDetail(@RequestParam(value="user", required=false) String user, @PathVariable int bookid) {
 		try {
 			logger.log(Level.INFO, "GET /api/book/" + bookid + "?user=" + user);
-			
 			logger.log(Level.INFO, "Get book.(bookid=" + bookid + ")");
 			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 			
-			Book book = new Book();
-			
 			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidからBookを取得
 			if(bookOpt.isPresent()) {
-				book = bookOpt.get();
-				logger.log(Level.INFO, "Return book.");
+				Book book = bookOpt.get();
+				logger.log(Level.INFO, "Return Book.");
 				return book;
 			}
 			
@@ -172,7 +171,8 @@ public class BookAPIController {
 			throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとしてthrow
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "[Book API] Internal Server Error");
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		}
 	}
@@ -187,24 +187,23 @@ public class BookAPIController {
 			logger.log(Level.INFO, " title: " + postBook.getTitle());
 			logger.log(Level.INFO, " overview: " + postBook.getOverview());
 			
-			logger.log(Level.INFO, "Create book instance.");
+			logger.log(Level.INFO, "Create Book instance.");
 			Book book = new Book();
 			book.setTitle(postBook.getTitle());
 			book.setOverview(postBook.getOverview());
 			
-			logger.log(Level.INFO, "Insert book.");
+			logger.log(Level.INFO, "Insert Book.");
 			logger.log(Level.FINE, "bookService.insertOne(" + book + ")");
-			
 			book = bookService.insertOne(book); // Bookの新規登録
+			logger.log(Level.INFO, "Book has inserted.");
 			
-			logger.log(Level.INFO, "Return book.(user:" + postBook.getUser() + " bookid: " + book.getId() + ")");
+			logger.log(Level.INFO, "Return Book.(user:" + postBook.getUser() + " bookid: " + book.getId() + ")");
 			
 			return book;
 		}
-		catch (HttpClientErrorException e) {
-			throw e;
-		}
-		catch (HttpServerErrorException e) {
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		} 
 	}
@@ -219,63 +218,115 @@ public class BookAPIController {
 			logger.log(Level.INFO, " overview: " + postBook.getOverview());
 			logger.log(Level.INFO, " totalevaluation: " + postBook.getTotalevaluation());
 			
-			Book book = new Book();
 			
-			logger.log(Level.INFO, "Get book.");
+			logger.log(Level.INFO, "Get Book.");
 			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 			
 			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidから本の詳細情報を取得
 			if(bookOpt.isPresent()) {
-				logger.log(Level.INFO, "Update book.");
-				
-				book = bookOpt.get();
+				Book book = bookOpt.get();
 				if (postBook.getTitle() != null) {
+					logger.log(Level.INFO, " Set title: " + postBook.getTitle());
 					book.setTitle(postBook.getTitle());
 				}
 				if (postBook.getOverview() != null) {
+					logger.log(Level.INFO, " Set overview: " + postBook.getOverview());
 					book.setOverview(postBook.getOverview());
 				}
 				if (postBook.getTotalevaluation() != 0.0) {
+					logger.log(Level.INFO, " Set totalevaluation: " + postBook.getTotalevaluation());
 					book.setTotalevaluation(postBook.getTotalevaluation());
 				}
-				book = bookService.updateOne(book); // Bookの更新
 				
-				logger.log(Level.INFO, "bookid=" + book.getId() + " is updated.");
+				logger.log(Level.INFO, "Update Book.");
+				book = bookService.updateOne(book); // Bookの更新
+				logger.log(Level.INFO, "Book has updated.(bookid=" + book.getId() + ")");
+				
+				logger.log(Level.INFO, "Return Book.(bookid=" + book.getId() + ")");
+				
+				return book;
 			}
-			
-			logger.log(Level.INFO, "return book user:" + postBook.getUser() + " bookid: " + book.getId());
-			
-			return book;
-		}
-		catch (HttpClientErrorException e) {
-			throw e;
-		}
-		catch (HttpServerErrorException e) {
-			throw e;
-		} 
+				// bookidに対応するBookがなければ404エラー
+				logger.log(Level.SEVERE, "throw  HttpClientErrorException");
+			    throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found");
+				
+			}
+			catch (HttpClientErrorException e) {
+				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+				throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとしてthrow
+			}
+			catch (HttpServerErrorException e) {
+				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
+				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+				throw new ResponseStatusException(e.getStatusCode()); // restControllerのレスポンスコードとしてthrow
+			}
+			catch (Exception e) {
+				logger.log(Level.SEVERE, "Catch Exception");
+				logger.log(Level.SEVERE, "Internal Server Error");
+				throw e;
+			}
 	}
 	
-	// Book削除API（ToDo: Review APIエラー時のエラーハンドリング）
+	// Book削除API
 	@DeleteMapping("/api/book/{bookid}")
 	public void deleteReview(@RequestParam(value="user", required=false) String user, @PathVariable int bookid) {
 		try {
-			logger.log(Level.INFO, "DELETE /book/" + bookid);
-			logger.log(Level.INFO, "user: " + user);
+			logger.log(Level.INFO, "DELETE /book/" + bookid + "?user=" + user);
 
 			// Review全件削除API
-			logger.log(Level.INFO, "Delete all reviews related to bookid =" + bookid + ".");
-			logger.log(Level.INFO, "DELETE " + REVIEW_API_URL + "/all?user=" + user + "&bookid=" + bookid);
-			ResponseEntity<Void> responseReview = restTemplate.exchange(REVIEW_API_URL + "/all?user={user}&bookid={bookid}", HttpMethod.DELETE, null, Void.class, user, bookid);
+			logger.log(Level.INFO, "Delete all Review related to bookid =" + bookid + ".");
+			// ResponseEntity<Void> responseReview = restTemplate.exchange(REVIEW_API_URL + "/all?user={user}&bookid={bookid}", HttpMethod.DELETE, null, Void.class, user, bookid);
+			deleteReviewAllApi(user,bookid);
 			
-			logger.log(Level.INFO, "Delete book bookid =" + bookid + ".");
+			logger.log(Level.INFO, "Delete Book(bookid =" + bookid + ") has deleted.");
 			logger.log(Level.FINE, "bookService.deleteOneById(" + bookid + ")");
 			bookService.deleteOneById(bookid); // Bookを削除
 		}
 		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad Request."); // restControllerのレスポンスコードとして400をthrow
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error."); // restControllerのレスポンスコードとして500をthrow
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Internal Server Error");
+			throw e;
+		}
+	}
+	
+	// Review全件削除API実行メソッド
+	// [Review API] SELETE /api/review/all
+	void deleteReviewAllApi(String user, int bookid) {
+		String reviewRequestUrl = REVIEW_API_URL + "/all?user=" + user + "&bookid=" + bookid;
+	
+		try {
+			// ReviewAPI
+			logger.log(Level.INFO, "[Review API] Request to Review API.");
+			logger.log(Level.INFO, "[Review API] DELETE " + reviewRequestUrl);
+			ResponseEntity<Book> responseBook = restTemplate.exchange(reviewRequestUrl, HttpMethod.DELETE, null, Book.class);
+			logger.log(Level.INFO, "[Review API] All reviews related to bookid = " + bookid + " has deleted.");
+			
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Review API] Catch  HttpClientErrorException");
 			throw e;
 		}
 		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Review API] Catch HttpServerErrorException");
 			throw e;
 		}
-	}	
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Review API] Catch Exception");
+			logger.log(Level.SEVERE, "[Review API] Unable access to " + "DELETE " + reviewRequestUrl);
+			throw e;
+		}
+	
+	}
+	
 }

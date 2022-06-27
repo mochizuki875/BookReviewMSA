@@ -39,12 +39,12 @@ public class BookServiceImpl implements BookService {
 		return bookRepository.selectTopN(n);
 	}
 	
-	// Bookをoffset単位で分割表示する際のページ数を取得
+	// Bookをlimit単位で分割表示する際のページ数を取得(limit: 1ページあたりの表示件数)
 	@Override
-	public int countAllPages(int offset) {
-		logger.log(Level.FINER, "countAllPages(" +  offset + ")");
-		logger.log(Level.FINER, "(int)Math.ceil((double)bookRepository.countAll() /" +  offset);
-		return (int)Math.ceil((double)bookRepository.countAll() / offset);
+	public int countAllPages(int limit) {
+		logger.log(Level.FINER, "countAllPages(" +  limit + ")");
+		logger.log(Level.FINER, "(int)Math.ceil((double)bookRepository.countAll() /" +  limit);
+		return (int)Math.ceil((double)bookRepository.countAll() / limit);
 	}
 
 	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得

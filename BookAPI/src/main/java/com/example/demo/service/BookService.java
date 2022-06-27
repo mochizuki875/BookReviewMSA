@@ -13,8 +13,8 @@ public interface BookService {
 	// 上位n件のbookを取得
 	Iterable<Book> selectTopN(int n);
 	
-	// Bookをoffset単位で分割表示する際のページ数を取得(★ToDo:offsetではなくlimit)
-	int countAllPages(int offset);
+	// Bookをlimit単位で分割表示する際のページ数を取得(limit: 1ページあたりの表示件数)
+	int countAllPages(int limit);
 	
 	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
 	Iterable<Book> selectAllDescByPage(int page, int limit);
