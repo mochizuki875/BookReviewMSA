@@ -47,7 +47,7 @@ public class BookServiceImpl implements BookService {
 		return (int)Math.ceil((double)bookRepository.countAll() / limit);
 	}
 
-	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
+	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得（totalevaluationの高い順に並び替え）
 	@Override
 	public Iterable<Book> selectAllDescByPage(int page, int limit) {
 		logger.log(Level.FINER, "selectAllDescByPage(" + page + ", " + limit + ")");

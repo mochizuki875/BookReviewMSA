@@ -8,10 +8,10 @@ import com.example.demo.entity.TotalEvaluation;
 
 public interface ReviewService {
 
-	// ReviewのIDを指定してRVを1件取得
+	// reviewidを指定してReviewを1件取得
 	Optional<Review> selectOneById(int id);
 	
-	// Reviewを指定してReviewを1件削除
+	// reviewidを指定してReviewを1件削除
 	void deleteOneById(int id);
 
 	// Reviewを1件登録
@@ -24,12 +24,15 @@ public interface ReviewService {
 	void deleteAllByBookId(int bookid);
 	
 	// 指定したbookidのTotalEvaluationを取得
-	Iterable<TotalEvaluation> selectTotalEvaluationByBookId(List<Integer> bookids);
+	double selectTotalEvaluationByBookId(int bookid);
+	
+	// 指定した複数bookidのTotalEvaluationを取得
+	Iterable<TotalEvaluation> selectTotalEvaluationByBookIds(List<Integer> bookids);
 	 
 	// 上位n件のTotalEvaluationを取得
 	Iterable<TotalEvaluation> selectTotalEvaluationTopN(int n);
 	 
-	// TotalEvaluationをlimit単位で分割取得する際のページ数を取得
+	// TotalEvaluationをlimit単位で分割取得する際のページ数を取得（未実装）
 	
 	 
 	// 登録されている全ReviewからTotalEvaluationを算出したものをlimit単位でページ分割し、指定したpageに含まれるTotalEvaluation一覧を取得	

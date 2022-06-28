@@ -24,7 +24,7 @@ public class ReviewServiceImpl implements ReviewService {
 	Logger logger = Logger.getLogger(ReviewServiceImpl.class.getName());
 	ConsoleHandler handler = new ConsoleHandler();
 	
-	// ReviewのIDを指定してRVを1件取得
+	// reviewidを指定してReviewを1件取得
 	@Override
 	public Optional<Review> selectOneById(int id){
 		logger.log(Level.FINER, "selectOneById(" + id + ")");
@@ -32,7 +32,7 @@ public class ReviewServiceImpl implements ReviewService {
 		return reviewRepository.findById(id);
 	}
 	
-	// Reviewを指定してReviewを1件削除
+	// reviewidを指定してReviewを1件削除
 	@Override
 	public void deleteOneById(int id) {
 		logger.log(Level.FINER, "deleteOneById(" + id + ")");
@@ -65,10 +65,17 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 	
 	// 指定したbookidのTotalEvaluationを取得
-	public Iterable<TotalEvaluation> selectTotalEvaluationByBookId(List<Integer> bookids){
-		logger.log(Level.FINER, "selectTotalEvaluationByBookId(" + bookids + ")");
-		logger.log(Level.FINER, "reviewRepository.findTotalEvaluationByBookId(" + bookids + ")");
-		return reviewRepository.findTotalEvaluationByBookId(bookids);
+	public double selectTotalEvaluationByBookId(int bookid) {
+		logger.log(Level.FINER, "selectTotalEvaluationByBookId(" + bookid + ")");
+		logger.log(Level.FINER, "reviewRepository.findTotalEvaluationByBookId(" + bookid + ")");
+		return reviewRepository.findTotalEvaluationByBookId(bookid);
+	}
+	
+	// 指定した複数bookidのTotalEvaluationを取得
+	public Iterable<TotalEvaluation> selectTotalEvaluationByBookIds(List<Integer> bookids){
+		logger.log(Level.FINER, "selectTotalEvaluationByBookIds(" + bookids + ")");
+		logger.log(Level.FINER, "reviewRepository.findTotalEvaluationByBookIds(" + bookids + ")");
+		return reviewRepository.findTotalEvaluationByBookIds(bookids);
 	}
 
 	// 上位n件のTotalEvaluationを取得
@@ -79,16 +86,7 @@ public class ReviewServiceImpl implements ReviewService {
 		return reviewRepository.selectTotalEvaluationTopN(n);
 	}
 	 
-	// TotalEvaluationをlimit単位で分割取得する際のページ数を取得
-	
-	
-	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
-//	@Override
-//	public Iterable<Book> selectAllDescByPage(int page, int limit) {
-//		logger.log(Level.FINER, "selectAllDescByPage(" + page + ", " + limit + ")");
-//		logger.log(Level.FINER, "bookRepository.selectAllDescByLimitOffset(" + limit + ", " + limit*(page-1) + ")");
-//		return bookRepository.selectAllDescByLimitOffset(limit, limit*(page-1));
-//	}
+	// TotalEvaluationをlimit単位で分割取得する際のページ数を取得（未実装）
 	 
 	// 登録されている全ReviewからTotalEvaluationを算出したものをlimit単位でページ分割し、指定したpageに含まれるTotalEvaluation一覧を取得	
 	@Override

@@ -9,13 +9,13 @@ import org.springframework.data.relational.core.mapping.Table;
 public class Review {
 	@Id
 	@Column("id")
-	private int id; // 主キー
+	private int id; // reviewid(主キー)
 	@Column("evaluation")
-	private int evaluation; // 本の評価（1~5）
+	private int evaluation; // Bookの評価（1~5）
 	@Column("content")
-	private String content; // 本のレビュー内容
+	private String content; // Bookのレビュー内容
 	@Column("bookid")
-	private int bookid; // 本のID
+	private int bookid; // Reviewが紐づくbookid
 	@Column("userid")
 	private int userid; // ユーザーID
 	

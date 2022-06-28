@@ -2,8 +2,8 @@ package com.example.demo.entity;
 
 public class PostReview {
 	String user; // ユーザー
-	int evaluation = 0; // 本の評価
-	String content; // 本のレビュー内容
+	int evaluation = 0; // Bookの評価
+	String content; // Bookのレビュー内容
 	int bookid; // 対象のbookid
 	int userid = 0; // ユーザーID
 	

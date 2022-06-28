@@ -16,7 +16,7 @@ public interface BookService {
 	// Bookをlimit単位で分割表示する際のページ数を取得(limit: 1ページあたりの表示件数)
 	int countAllPages(int limit);
 	
-	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
+	// 登録されている全Bookをlimit単位でページ分割し指定したpageに含まれるBook一覧を取得（totalevaluationの高い順に並び替え）
 	Iterable<Book> selectAllDescByPage(int page, int limit);
 	
 	// Bookを1件取得

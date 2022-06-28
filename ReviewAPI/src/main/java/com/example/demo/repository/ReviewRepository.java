@@ -17,15 +17,18 @@ public interface ReviewRepository extends CrudRepository<Review, Integer> {
 	@Query("SELECT * FROM review WHERE bookid= :bookid;")
 	Iterable<Review> findAllByBookid(@Param("bookid") int bookid);
 	
-	// bookidを指定してReviewを全件削除
-	// DML系クエリを実行する際は@Modifyingが必要
+	// bookidを指定してReviewを全件削除（DML系クエリを実行する際は@Modifyingが必要）
 	@Modifying
 	@Query("DELETE FROM review WHERE bookid= :bookid;")
 	void deleteAllByBookid(@Param("bookid") int bookid);
 	
 	// bookidを指定してTotalEvaluationを取得
+	@Query("SELECT ROUND(AVG(evaluation),1) AS totalevaluation FROM review WHERE bookid = :bookid GROUP BY bookid;")
+	double findTotalEvaluationByBookId(@Param("bookid") int bookid);
+	
+	// bookidを複数指定してTotalEvaluationを取得
 	@Query("SELECT * FROM (SELECT bookid, ROUND(AVG(evaluation),1) AS value FROM review GROUP BY bookid) totalEvaluations WHERE bookid IN (:bookids);")
-	Iterable<TotalEvaluation> findTotalEvaluationByBookId(@Param("bookids") List<Integer> bookids);
+	Iterable<TotalEvaluation> findTotalEvaluationByBookIds(@Param("bookids") List<Integer> bookids);
 	
 	// 上位n件のTotalEvaluationを取得
 	@Query("SELECT bookid, ROUND(AVG(evaluation),1) AS value FROM review GROUP BY bookid ORDER BY value DESC, bookid ASC LIMIT :n;")

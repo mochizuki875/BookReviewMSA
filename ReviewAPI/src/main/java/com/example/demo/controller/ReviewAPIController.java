@@ -54,17 +54,16 @@ public class ReviewAPIController {
 	// Review一覧取得API
 	// リクエストパラメータで指定されたbookidに紐付くReviewを返す
 	@GetMapping("/api/review")
-	public ReviewList getReview(@RequestParam(value="user", required=false) String user, @RequestParam(value="bookid", required=true) int bookid) {
+	public ReviewList getReviewList(@RequestParam(value="user", required=false) String user, @RequestParam(value="bookid", required=true) int bookid) {
 		try {
 			logger.log(Level.INFO, "GET /api/review/?user=" + user + "&bookid=" + bookid);
 			
-			logger.log(Level.INFO, "Get Review.(bookid=" + bookid + ")");
-			logger.log(Level.FINE, "reviewList.setReviewListPage(reviewService.selectAllByBookId(" + bookid + ")");
+			logger.log(Level.INFO, "Get ReviewList.(bookid=" + bookid + ")");
 			
 			ReviewList reviewList = new ReviewList(); // ReviewListインスタンスを作成
 			reviewList.setReviewListPage(reviewService.selectAllByBookId(bookid)); // Review一覧を取得
+
 			logger.log(Level.INFO, "Return ReviewList.");
-			
 			return reviewList; 
 		} 
 		catch (Exception e) {
@@ -88,6 +87,12 @@ public class ReviewAPIController {
 			String user = postReview.getUser();
 			int bookid = postReview.getBookid();
 			
+			// bookidが指定されていなければ400エラー
+			if (bookid == 0) {
+				logger.log(Level.SEVERE, "bookid is empty.");
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad Request. bookid is empty."); // restControllerのレスポンスコードとして400をthrow
+			}
+			
 			// Book取得API実行メソッド
 			// bookidに対応するBookを取得（Review登録対象のBookが存在するかを確認）
 			logger.log(Level.INFO, "Get Book.(bookid=" + bookid + ")");
@@ -109,7 +114,7 @@ public class ReviewAPIController {
 			
 			// 対象bookidのtotalevaluationを算出
 			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
-			double totalevaluation = calcTotalevaluation(review.getBookid());
+			double totalevaluation = reviewService.selectTotalEvaluationByBookId(bookid);
 			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
 			
 			// bookidに対応するBookのtotalevaluationを更新
@@ -151,20 +156,27 @@ public class ReviewAPIController {
 			
 			int bookid =reviewService.selectOneById(reviewid).get().getBookid(); // 削除対象Reviewのbookidを取得
 			
+			// Reviewからbookidが取得できなければ500エラー
+			if (bookid == 0) {
+				logger.log(Level.SEVERE, "Couldn't get bookid from Review.(reviewid = " + reviewid + ")");
+				throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error. Couldn't get bookid from Review(reviewid = " + reviewid + ")."); // restControllerのレスポンスコードとして400をthrow
+			}
+			
 			// Book取得API実行メソッド
 			// bookidに対応するBookを取得（Review削除対象のBookが存在するかを確認）
 			logger.log(Level.INFO, "Get Book.(bookid = " + bookid + ")");
 			ResponseEntity<Book> responseBook = getBookApi(user, bookid);
 			
 			// reviewidを指定してReviewを削除
-			logger.log(Level.INFO, "Delete review of reviewid=" + reviewid + ".");
+			logger.log(Level.INFO, "Delete Review.(reviewid = " + reviewid + ")");
 			logger.log(Level.FINE, "reviewService.deleteOneById(" + reviewid + ")");
 			reviewService.deleteOneById(reviewid); 
-			logger.log(Level.INFO, "Review of reviewid=" + reviewid + " has deleted.");
+			logger.log(Level.INFO, "Review has deleted.(reviewid = " + reviewid + ")");
 
 			// 対象bookidのtotalevaluationを算出
-			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
-			double totalevaluation = calcTotalevaluation(bookid);
+			logger.log(Level.INFO, "Calculate totalEvaluation.(bookid = " + bookid + ")");
+			// double totalevaluation = calcTotalevaluation(bookid);
+			double totalevaluation = reviewService.selectTotalEvaluationByBookId(bookid);
 			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
 
 			// bookidに対応するBookのtotalevaluationを更新
@@ -197,12 +209,12 @@ public class ReviewAPIController {
 	}
 	
 	// Review全件削除API
-	// 指定したbookidに紐付くReviewとTotalEvaluationを全件削除
+	// 指定したbookidに紐付くReviewを全件削除
 	@DeleteMapping("/api/review/all")
-	public void deleteReviewAll(@RequestParam(value="user", required=false) String user, @RequestParam(value="bookid", required=true) int bookid) {
+	public void deleteAllReview(@RequestParam(value="user", required=false) String user, @RequestParam(value="bookid", required=true) int bookid) {
 		try {
 			logger.log(Level.INFO, "DELETE /api/review/all?user=" + user + "&bookid=" + bookid);
-			
+
 			// Bookに紐付くReviewを全件削除
 			logger.log(Level.INFO, "Delete all reviews related to bookid = " + bookid + ".");
 			logger.log(Level.FINE, "reviewService.deleteAllByBookId(" + bookid + ")");
@@ -232,7 +244,7 @@ public class ReviewAPIController {
 				}
 			} else { // bookidが指定されたら該当するTotalEvaluationを返す
 				logger.log(Level.INFO, "GET /api/review/tolalevaluation?user=" + user + "&bookid[]=" + bookids);
-				return reviewService.selectTotalEvaluationByBookId(bookids);
+				return reviewService.selectTotalEvaluationByBookIds(bookids);
 			}
 		}
 		catch (Exception e) {
@@ -242,25 +254,7 @@ public class ReviewAPIController {
 		}
 	}
 	
-	
-	
 	// -------------------
-		
-	// bookidに紐付くReviewからtotalreviewを算出するメソッド
-	double calcTotalevaluation(int bookid) {
-		logger.log(Level.INFO, "Get Reviews of bookid=" + bookid + ".");
-		logger.log(Level.FINE, "reviewService.selectAllByBookId(" + bookid + ")");
-		Iterable<Review> reviewList = reviewService.selectAllByBookId(bookid); // 対象BookのReviewを全て取得
-		
-		logger.log(Level.INFO, "Calculate TotalEvaluation Value.");
-		double value = 0.0;
-		int counter = 0;
-		for(Review review : reviewList) {
-			value += review.getEvaluation();
-			counter ++;
-		}
-		return (double)Math.round(value*10/counter)/10;
-	}
 	
 	// Book取得API実行メソッド
 	// [Book API] GET /api/book/{bookid}
