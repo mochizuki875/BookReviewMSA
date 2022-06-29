@@ -33,8 +33,7 @@ public interface BookRepository extends CrudRepository<Book, Integer> {
 	@Query("SELECT COUNT(*) FROM book WHERE title ILIKE '%' || :keyword || '%';")
 	int countSearchAll(@Param("keyword") String keyword);
 	
-	// Bookのidを指定してtotalevaluationを更新する
-	// DML系クエリを実行する際は@Modifyingが必要
+	// Bookのidを指定してtotalevaluationを更新する（DML系クエリを実行する際は@Modifyingが必要）
 	@Modifying
 	@Query("UPDATE book SET totalevaluation = :totalevaluation WHERE id = :id;")
 	void updateTotalevaluationById(@Param("id") int id, @Param("totalevaluation") double totalevaluation);

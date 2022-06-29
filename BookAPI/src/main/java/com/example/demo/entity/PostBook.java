@@ -2,9 +2,9 @@ package com.example.demo.entity;
 
 public class PostBook {
 	String user; // ユーザー
-	String title; // 本のタイトル
-	String overview; // 本の概要
-	double totalevaluation; // 本の総合評価
+	String title; // Bookのタイトル
+	String overview; // Bookの概要
+	double totalevaluation; // Bookの総合評価
 	
 	public PostBook() {
 	}

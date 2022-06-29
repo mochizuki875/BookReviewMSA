@@ -1,22 +1,10 @@
 package com.example.demo.entity;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
-
-// reviewテーブル用のエンティティ
-@Table("review")
 public class Review {
-	@Id
-	@Column("id")
-	private int id; // 主キー
-	@Column("evaluation")
-	private int evaluation; // 本の評価（1~5）
-	@Column("content")
-	private String content; // 本のレビュー内容
-	@Column("bookid")
-	private int bookid; // 本のID
-	@Column("userid")
+	private int id; // 主キー(reviewid)
+	private int evaluation; // Bookの評価（1~5）
+	private String content; // Bookのレビュー内容
+	private int bookid; // Reviewが紐づくbookid
 	private int userid; // ユーザーID
 	
 	public Review() {

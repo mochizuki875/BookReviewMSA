@@ -9,13 +9,13 @@ import org.springframework.data.relational.core.mapping.Table;
 public class Book {
 	@Id
 	@Column("id")
-	private int id; // 主キー
+	private int id; // 主キー(bookid)
 	@Column("title")
-	private String title; // 本のタイトル
+	private String title; // Bookのタイトル
 	@Column("overview")
-	private String overview; // 本の概要
+	private String overview; // Bookの概要
 	@Column("totalevaluation")
-	private double totalevaluation; // 本の総合評価
+	private double totalevaluation; // Bookの総合評価
 	
 	public Book() {
 	}

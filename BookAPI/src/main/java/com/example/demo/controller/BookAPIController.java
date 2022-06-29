@@ -48,42 +48,40 @@ public class BookAPIController {
 	// Book一覧取得API
 	// 登録されているBook一覧を取得する
 	@GetMapping("/api/book")
-	public BookList getBook(@RequestParam(value="user", required=false) String user, @RequestParam(value="page", required=false, defaultValue = "0") int page) {
+	public BookList getBookList(@RequestParam(value="user", required=false) String user, @RequestParam(value="page", required=false, defaultValue = "0") int page) {
 		try {
-			BookList bookList = new BookList(); // レスポンス型インスタンスを作成
+			BookList bookList = new BookList(); // BookListインスタンスを作成
 			
-			if (page!=0) { // 指定されたpageのBook一覧を取得する
+			if (page!=0) { // pageが指定されている場合 
+				// 指定されたpageのBook一覧を取得する
 				logger.log(Level.INFO, "GET /api/book?user=" + user + "&page=" + page); 
-				bookList.setPage(page); // レスポンス用インスタンスにpageを格納
+				bookList.setPage(page); // BookListにpageを格納
 				
 				int allPages = bookService.countAllPages(PAGE_SIZE); // 全ページ数を取得
-				bookList.setAllPages(allPages); // レスポンス用インスタンスにallPageを格納
+				bookList.setAllPages(allPages); // BookListにallPageを格納
 				
-				logger.log(Level.INFO, "Get bookList of page " + page + "/" + allPages + ".(PAGE_SIZE=" + PAGE_SIZE + ")");
+				logger.log(Level.INFO, "Get BookList of page " + page + "/" + allPages + ".(PAGE_SIZE=" + PAGE_SIZE + ")");
 				logger.log(Level.FINE, "bookService.selectAllDescByPage(" + page + ", " + allPages + ")");
-				
 				Iterable<Book> bookListPage = bookService.selectAllDescByPage(page, PAGE_SIZE); // 指定したページのBook情報一覧を取得
-				bookList.setBookListPage(bookListPage);
+				logger.log(Level.INFO, "Success to get BookList.");
 				
-				logger.log(Level.INFO, "Return BookList.");
-				return bookList;
+				bookList.setBookListPage(bookListPage); // BookListにbookListPageを格納
 				
 			} else { // pageが指定されていない or page=0の場合
 				// 評価の高い上位TOP_NUMBER件のBookを取得する
 				logger.log(Level.INFO, "GET /api/book?user=" + user);
-				logger.log(Level.INFO, "Get bookList of top " + TOP_NUMBER + ".");
+				logger.log(Level.INFO, "Get BookList of top " + TOP_NUMBER + ".");
 				logger.log(Level.FINE, "bookService.selectTopN(" + TOP_NUMBER + ")");
-				
 				Iterable<Book> bookListPage = bookService.selectTopN(TOP_NUMBER); // 登録されているBookのうち上位TOP_NUMBER件のBookを件取得
+				logger.log(Level.INFO, "Success to get BookList.");
 				
-				bookList.setPage(1); // レスポンス用インスタンスにpageを格納
-				bookList.setAllPages(1); // レスポンス用インスタンスにallPageを格納
-				bookList.setBookListPage(bookListPage); // レスポンス用インスタンスにbookListPageを格納
+				bookList.setPage(1); // bookListPageにpageを格納
+				bookList.setAllPages(1); // bookListPageにallPageを格納
+				bookList.setBookListPage(bookListPage); // bookListPageにbookListPageを格納
 				
-				logger.log(Level.INFO, "Return bookList.");
-				
-				return bookList;
 			}
+			logger.log(Level.INFO, "Return BookList.");
+			return bookList;
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Catch Exception");
@@ -97,23 +95,23 @@ public class BookAPIController {
 	// 検索ワードをリクエストパラメータとして受け取って検索結果を返す（page件単位でページ分割した際の指定されたページ分）
 	@GetMapping("/api/book/search")
 	public BookList searchBook(@RequestParam(value="user", required=false) String user, @RequestParam(value="keyword", required=false) String keyword, @RequestParam(value="page", defaultValue = "1") int page) {
-		try { // keywordが指定されていない場合は上位TOP_NUMBER件のBook一覧を取得する
+		try {
 			logger.log(Level.INFO, "GET /api/book/search?user=" + user + "&keyword=" + keyword + "&page=" + page);
 			BookList bookList = new BookList();
 			
-			if(keyword == null | keyword == "") { // keywordが指定されていなければ上位TOP_NUMBER件を取得する
+			if(keyword == null | keyword == "") { // keywordが指定されていない場合
+				// 評価の高い上位TOP_NUMBER件のBookを取得する
 				logger.log(Level.INFO, "keyword=" + keyword);
-				logger.log(Level.INFO, "Get bookList of top " + TOP_NUMBER + ".");
-				logger.log(Level.FINE, "bookService.selectTopN(" + TOP_NUMBER + ")");
 				
+				logger.log(Level.INFO, "Get BookList of top " + TOP_NUMBER + ".");
+				logger.log(Level.FINE, "bookService.selectTopN(" + TOP_NUMBER + ")");
 				Iterable<Book> bookListPage = bookService.selectTopN(TOP_NUMBER); // Book情報のうち上位TOP_NUMBER件を取得する
+				logger.log(Level.INFO, "Success to get BookList.");
+				
 				bookList.setPage(1);
 				bookList.setAllPages(1);
 				bookList.setBookListPage(bookListPage);
 				
-				logger.log(Level.INFO, "Return BookList.");
-				
-				return bookList;
 			} else { // keywordが指定されている場合は検索結果のうちpage/PAGE_SIZEのBook一覧を取得する
 				logger.log(Level.INFO, "keyword=" + keyword);
 				
@@ -122,15 +120,17 @@ public class BookAPIController {
 				int allPages = bookService.countSearchAllPages(keyword, PAGE_SIZE); // 検索結果の全ページ数を取得
 				bookList.setAllPages(allPages);
 				
-				logger.log(Level.INFO, "Search keyword=" + keyword + " and get bookList of page " + page + "/" + allPages  + ".(PAGE_SIZE=" + PAGE_SIZE + ")");
+				logger.log(Level.INFO, "Search keyword = " + keyword + " and get BookList of page " + page + "/" + allPages  + ".(PAGE_SIZE = " + PAGE_SIZE + ")");
 				logger.log(Level.FINE, "bookService.searchAllDescByPage(" + keyword + ", " +  page + ", " +  PAGE_SIZE + ")");
-				
 				Iterable<Book> bookListPage = bookService.searchAllDescByPage(keyword, page, PAGE_SIZE); // keyword検索結果のうち指定したページのBook情報一覧を取得
+				logger.log(Level.INFO, "Success to get BookList.");
+				
 				bookList.setBookListPage(bookListPage);
 				
-				logger.log(Level.INFO, "Return BookList.");
-				return bookList;
 			}
+			logger.log(Level.INFO, "Return BookList.");
+			return bookList;
+
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Catch Exception");
@@ -142,20 +142,23 @@ public class BookAPIController {
 	// Book取得API
 	// bookidをリクエストパラメータとして受け取ってBookを返す
 	@GetMapping("/api/book/{bookid}")
-	public Book getBookDetail(@RequestParam(value="user", required=false) String user, @PathVariable int bookid) {
+	public Book getBook(@RequestParam(value="user", required=false) String user, @PathVariable int bookid) {
 		try {
 			logger.log(Level.INFO, "GET /api/book/" + bookid + "?user=" + user);
-			logger.log(Level.INFO, "Get book.(bookid=" + bookid + ")");
-			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 			
+			logger.log(Level.INFO, "Get book.(bookid = " + bookid + ")");
+			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidからBookを取得
 			if(bookOpt.isPresent()) {
 				Book book = bookOpt.get();
+				logger.log(Level.INFO, "Success to get Book.(bookid = " + bookid + ")");
+				
 				logger.log(Level.INFO, "Return Book.");
 				return book;
 			}
 			
 			// bookidに対応するBookがなければ404エラー
+			logger.log(Level.SEVERE, "Faild to get Book.(bookid = " + bookid + ")");
 			logger.log(Level.SEVERE, "throw  HttpClientErrorException");
 		    throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found");
 			
@@ -180,7 +183,7 @@ public class BookAPIController {
 	// Book新規登録API
 	@PostMapping("/api/book/insert")
 	// POSTでapplication/jsonでリクエストボディを受信するには@RequestParamではなく@RequestBody
-	public Book insert(@RequestBody PostBook postBook) {
+	public Book insertBook(@RequestBody PostBook postBook) {
 		try {
 			logger.log(Level.INFO, "POST /book/insert");
 			logger.log(Level.INFO, " user: " + postBook.getUser());
@@ -195,10 +198,9 @@ public class BookAPIController {
 			logger.log(Level.INFO, "Insert Book.");
 			logger.log(Level.FINE, "bookService.insertOne(" + book + ")");
 			book = bookService.insertOne(book); // Bookの新規登録
-			logger.log(Level.INFO, "Book has inserted.");
+			logger.log(Level.INFO, "Success to insert Book.");
 			
-			logger.log(Level.INFO, "Return Book.(user:" + postBook.getUser() + " bookid: " + book.getId() + ")");
-			
+			logger.log(Level.INFO, "Return Book.(bookid = " + book.getId() + ")");
 			return book;
 		}
 		catch (Exception e) {
@@ -210,7 +212,7 @@ public class BookAPIController {
 	
 	// Book更新API
 	@PostMapping("/api/book/{bookid}/update")
-	public Book update(@RequestBody PostBook postBook, @PathVariable(value="bookid", required=true) int bookid) {		
+	public Book updateBook(@RequestBody PostBook postBook, @PathVariable(value="bookid", required=true) int bookid) {		
 		try {
 			logger.log(Level.INFO, "POST /book/" + bookid + "/update");
 			logger.log(Level.INFO, " user: " + postBook.getUser());
@@ -219,11 +221,11 @@ public class BookAPIController {
 			logger.log(Level.INFO, " totalevaluation: " + postBook.getTotalevaluation());
 			
 			
-			logger.log(Level.INFO, "Get Book.");
+			logger.log(Level.INFO, "Get book.(bookid = " + bookid + ")");
 			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
-			
 			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidから本の詳細情報を取得
 			if(bookOpt.isPresent()) {
+				logger.log(Level.INFO, "Success to get Book.(bookid = " + bookid + ")");
 				Book book = bookOpt.get();
 				if (postBook.getTitle() != null) {
 					logger.log(Level.INFO, " Set title: " + postBook.getTitle());
@@ -238,15 +240,15 @@ public class BookAPIController {
 					book.setTotalevaluation(postBook.getTotalevaluation());
 				}
 				
-				logger.log(Level.INFO, "Update Book.");
+				logger.log(Level.INFO, "Update Book.(bookid = " + book.getId() + ")");
 				book = bookService.updateOne(book); // Bookの更新
-				logger.log(Level.INFO, "Book has updated.(bookid=" + book.getId() + ")");
+				logger.log(Level.INFO, "Success to updated Book.(bookid = " + book.getId() + ")");
 				
-				logger.log(Level.INFO, "Return Book.(bookid=" + book.getId() + ")");
-				
+				logger.log(Level.INFO, "Return Book.(bookid = " + book.getId() + ")");
 				return book;
 			}
 				// bookidに対応するBookがなければ404エラー
+				logger.log(Level.SEVERE, "Faild to get Book.(bookid = " + bookid + ")");
 				logger.log(Level.SEVERE, "throw  HttpClientErrorException");
 			    throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found");
 				
@@ -276,12 +278,13 @@ public class BookAPIController {
 
 			// Review全件削除API
 			logger.log(Level.INFO, "Delete all Review related to bookid =" + bookid + ".");
-			// ResponseEntity<Void> responseReview = restTemplate.exchange(REVIEW_API_URL + "/all?user={user}&bookid={bookid}", HttpMethod.DELETE, null, Void.class, user, bookid);
 			deleteReviewAllApi(user,bookid);
+			logger.log(Level.INFO, "Success to delete Review.(bookid = " + bookid + ")");
 			
-			logger.log(Level.INFO, "Delete Book(bookid =" + bookid + ") has deleted.");
+			logger.log(Level.INFO, "Delete Book. (bookid = " + bookid + ")");
 			logger.log(Level.FINE, "bookService.deleteOneById(" + bookid + ")");
 			bookService.deleteOneById(bookid); // Bookを削除
+			logger.log(Level.INFO, "Success to delete Book.(bookid = " + bookid + ")");
 		}
 		catch (HttpClientErrorException e) {
 			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");

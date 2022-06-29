@@ -71,12 +71,12 @@ public class BookServiceImpl implements BookService {
 		return bookRepository.searchAllDescByLimitOffset(keyword, limit, limit*(page-1));
 	}	
 	
-	// Bookのkeyword検索結果をoffset単位で分割表示する際のページ数を取得（★offsetではなくlimit）
+	// Bookのkeyword検索結果をlimit単位でページ分割表示する際のページ数を取得
 	@Override
-	public int countSearchAllPages(String keyword, int offset) {
-		logger.log(Level.FINER, "countSearchAllPages(" + keyword + ", " + offset + ")");
-		logger.log(Level.FINER, "(int)Math.ceil((double)bookRepository.countSearchAll(" + keyword + ") /" + offset + ")");
-		return (int)Math.ceil((double)bookRepository.countSearchAll(keyword) / offset);
+	public int countSearchAllPages(String keyword, int limit) {
+		logger.log(Level.FINER, "countSearchAllPages(" + keyword + ", " + limit + ")");
+		logger.log(Level.FINER, "(int)Math.ceil((double)bookRepository.countSearchAll(" + keyword + ") /" + limit + ")");
+		return (int)Math.ceil((double)bookRepository.countSearchAll(keyword) / limit);
 	}
 	
 	// Bookを1件登録して登録されたBookを返す

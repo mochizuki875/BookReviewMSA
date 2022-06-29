@@ -59,10 +59,10 @@ public class ReviewAPIController {
 			logger.log(Level.INFO, "GET /api/review/?user=" + user + "&bookid=" + bookid);
 			
 			logger.log(Level.INFO, "Get ReviewList.(bookid=" + bookid + ")");
-			
 			ReviewList reviewList = new ReviewList(); // ReviewListインスタンスを作成
 			reviewList.setReviewListPage(reviewService.selectAllByBookId(bookid)); // Review一覧を取得
-
+			logger.log(Level.INFO, "Success to get ReviewList.(bookid=" + bookid + ")");
+			
 			logger.log(Level.INFO, "Return ReviewList.");
 			return reviewList; 
 		} 
@@ -97,6 +97,7 @@ public class ReviewAPIController {
 			// bookidに対応するBookを取得（Review登録対象のBookが存在するかを確認）
 			logger.log(Level.INFO, "Get Book.(bookid=" + bookid + ")");
 			ResponseEntity<Book> responseBook = getBookApi(user, bookid);
+			logger.log(Level.INFO, "Success to get Book.");
 			
 			// Reviewを作成
 			logger.log(Level.INFO, "Create Review instance.");
@@ -110,12 +111,13 @@ public class ReviewAPIController {
 			logger.log(Level.INFO, "Insert Review.");
 			logger.log(Level.FINE, "reviewService.insertOne(" + review + ")");
 			reviewService.insertOne(review);
-			logger.log(Level.INFO, "Review has inserted.");
+			logger.log(Level.INFO, "Success to insert Review.");
 			
 			// 対象bookidのtotalevaluationを算出
 			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
 			double totalevaluation = reviewService.selectTotalEvaluationByBookId(bookid);
 			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
+			logger.log(Level.INFO, "Success to calcurate totalevaluation.");
 			
 			// bookidに対応するBookのtotalevaluationを更新
 			logger.log(Level.INFO, "Create PostBook instance.");
@@ -126,6 +128,7 @@ public class ReviewAPIController {
 			// Book更新API実行メソッド
 			logger.log(Level.INFO, "Update Book totalevaluation.(bookid = " + bookid + ")");
 			responseBook = postBookApi(user, bookid, postBook);
+			logger.log(Level.INFO, "Success to update Book.(bookid = " + bookid + ")");
 			
 			logger.log(Level.INFO, "Return Review.(reviewid = " + review.getId() + ")");
 			return review;
@@ -166,18 +169,20 @@ public class ReviewAPIController {
 			// bookidに対応するBookを取得（Review削除対象のBookが存在するかを確認）
 			logger.log(Level.INFO, "Get Book.(bookid = " + bookid + ")");
 			ResponseEntity<Book> responseBook = getBookApi(user, bookid);
+			logger.log(Level.INFO, "Success to get Book.(bookid = " + bookid + ")");
 			
 			// reviewidを指定してReviewを削除
 			logger.log(Level.INFO, "Delete Review.(reviewid = " + reviewid + ")");
 			logger.log(Level.FINE, "reviewService.deleteOneById(" + reviewid + ")");
 			reviewService.deleteOneById(reviewid); 
-			logger.log(Level.INFO, "Review has deleted.(reviewid = " + reviewid + ")");
+			logger.log(Level.INFO, "Success to delete Review.(reviewid = " + reviewid + ")");
 
 			// 対象bookidのtotalevaluationを算出
 			logger.log(Level.INFO, "Calculate totalEvaluation.(bookid = " + bookid + ")");
 			// double totalevaluation = calcTotalevaluation(bookid);
 			double totalevaluation = reviewService.selectTotalEvaluationByBookId(bookid);
 			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
+			logger.log(Level.INFO, "Success to calcurate totalevaluation.");
 
 			// bookidに対応するBookのtotalevaluationを更新
 			logger.log(Level.INFO, "Create PostBook instance.");
@@ -188,6 +193,7 @@ public class ReviewAPIController {
 			// Book更新API実行メソッド
 			logger.log(Level.INFO, "Update Book totalevaluation.(bookid = " + bookid + ")");
 			responseBook = postBookApi(user, bookid, postBook);
+			logger.log(Level.INFO, "Success to update Book.");
 		}
 		catch (HttpClientErrorException e) {
 			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
@@ -216,10 +222,10 @@ public class ReviewAPIController {
 			logger.log(Level.INFO, "DELETE /api/review/all?user=" + user + "&bookid=" + bookid);
 
 			// Bookに紐付くReviewを全件削除
-			logger.log(Level.INFO, "Delete all reviews related to bookid = " + bookid + ".");
+			logger.log(Level.INFO, "Delete all Review.(bookid = " + bookid + ")");
 			logger.log(Level.FINE, "reviewService.deleteAllByBookId(" + bookid + ")");
 			reviewService.deleteAllByBookId(bookid); 
-			logger.log(Level.INFO, "All reviews related to bookid = " + bookid + " has deleted.");
+			logger.log(Level.INFO, "Success to delete all Review.(bookid = " + bookid + ")");
 			
 		}
 		catch (Exception e) {
@@ -235,7 +241,7 @@ public class ReviewAPIController {
 	public Iterable<TotalEvaluation> getTotalEvaluation(@RequestParam(value="user", required=false) String user, @RequestParam(value="page", required=false, defaultValue = "0") int page, @RequestParam(value="bookids[]", required=false) List<Integer> bookids){
 		try {
 			if(bookids == null) { // bookidがパラメータで指定されていない場合
-				if (page != 0 ) { // 指定されたpageの結果を返す
+				if (page != 0 ) { // TotalEvaluationが高い順に並べてページ分割した際の指定されたpageの結果を返す
 					logger.log(Level.INFO, "GET /api/review/tolalevaluation?user=" + user + "&page=" + page);
 					return reviewService.selectTotalEvaluationDescByLimitOffset(page, PAGE_SIZE);
 				} else { // 上位N件を返す
@@ -283,7 +289,6 @@ public class ReviewAPIController {
 			logger.log(Level.SEVERE, "[Book API] Unable access to " + "GET " + bookRequestUrl);
 			throw e;
 		}
-	
 	}
 	
 	// Book更新API実行メソッド

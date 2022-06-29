@@ -25,8 +25,8 @@ public interface BookService {
 	// 登録されている全Bookをkeywordで検索した結果をlimit単位でページ分割し指定したpageに含まれるBook一覧を取得
 	Iterable<Book> searchAllDescByPage(String keyword, int page, int limit);
 	
-	// Bookのkeyword検索結果をoffset単位で分割表示する際のページ数を取得
-	int countSearchAllPages(String keyword, int offset);
+	// Bookのkeyword検索結果をlimit単位でページ分割表示する際のページ数を取得
+	int countSearchAllPages(String keyword, int limit);
 	
 	// Bookを1件登録して登録されたBookを返す
 	Book insertOne(Book book);
