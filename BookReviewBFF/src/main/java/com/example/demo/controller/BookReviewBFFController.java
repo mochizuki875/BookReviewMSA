@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,7 +44,7 @@ public class BookReviewBFFController {
 	Logger logger = Logger.getLogger(BookReviewBFFController.class.getName());
 	ConsoleHandler handler = new ConsoleHandler();
 	
-	// Book表示（デフォルト）
+	// Book一覧表示
 	@GetMapping("/")
 	public String showHome(@RequestParam(value="user", required=false) String user, Model model) {
 		try {
@@ -54,35 +55,25 @@ public class BookReviewBFFController {
 			int showFlag = 0; // Book表示フラグ
 			model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
 			
-			logger.log(Level.INFO, "Get BookList.");
-			
-			bookRequestUrl = BOOK_API_URL + "?user=" + user;
-			
 			try {
-				// Book一覧取得API
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
-				ResponseEntity<BookList> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, BookList.class);
-				logger.log(Level.INFO, "[Book API] BookList has returned from Book API.");
+				logger.log(Level.INFO, "Get BookList.");
+				ResponseEntity<BookList> responseBook = getBookListApi(user); // Book一覧取得API実行
+				logger.log(Level.INFO, "BookList has returned.");
+				
 				model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
 			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+			catch(Exception e) {
+				// エラーでも画面表示できるように空のレスポンスを返す
+				BookList bookList = new BookList();
+				ResponseEntity<BookList> responseBook = new ResponseEntity<BookList>(bookList, HttpStatus.INTERNAL_SERVER_ERROR);
+				model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
 			}
 			
 			logger.log(Level.INFO, "Return home page and show bookList.");
 			return "home";
 		}
 		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
 			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		}
@@ -99,38 +90,30 @@ public class BookReviewBFFController {
 			int showFlag = 1; // Book表示フラグ
 			model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
 			
-			logger.log(Level.INFO, "Get BookList.");
-			
-			bookRequestUrl = BOOK_API_URL + "?user=" + user + "&page=" + page;
-			
 			try {
-				// Book一覧取得API
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
-				ResponseEntity<BookList> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, BookList.class);
-				logger.log(Level.INFO, "[Book API] BookList has returned from Book API.");
+				logger.log(Level.INFO, "Get BookList.(page = " + page + ")");
+				ResponseEntity<BookList> responseBook = getBookListPageApi(user, page); // Book一覧取得API実行
+				logger.log(Level.INFO, "BookList has returned.(page = " + page + ")");
 				
 				model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
 				model.addAttribute("page", responseBook.getBody().getPage()); //  pageをModelに格納
 				model.addAttribute("allPages", responseBook.getBody().getAllPages()); //  allPagesをModelに格納
 			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
 			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
+				// エラーでも画面表示できるように空のレスポンスを返す
+				BookList bookList = new BookList();
+				ResponseEntity<BookList> responseBook = new ResponseEntity<BookList>(bookList, HttpStatus.INTERNAL_SERVER_ERROR);
+				
+				model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
+				model.addAttribute("page", responseBook.getBody().getPage()); //  pageをModelに格納
+				model.addAttribute("allPages", responseBook.getBody().getAllPages()); //  allPagesをModelに格納
 			}
 			
 			logger.log(Level.INFO, "Return home page and show bookList. (page = " + page + ")");
 			return "home";
 		}
 		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
 			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		}
@@ -143,51 +126,45 @@ public class BookReviewBFFController {
 		try {
 			logger.log(Level.INFO, "GET /book/search?user=" + user + "&keyword=" + keyword + "&page=" + page);
 			
-			model.addAttribute("user", user); // userをModelに格納
-			model.addAttribute("keyword", keyword); // keywordをModelに格納
-					
-			int showFlag = 2; // Book表示フラグ
-			model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
-	
-			logger.log(Level.INFO, "Search keyword=" + keyword + " and get bookList of page " + page);
-			
-			bookRequestUrl = BOOK_API_URL + "/search?user=" + user + "&keyword=" + keyword + "&page=" + page;
-			
-			try {
-				// Book検索API
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
-				ResponseEntity<BookList> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, BookList.class);
-				logger.log(Level.INFO, "[Book API] BookList has returned from Book API.");
-				
-				model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
-				model.addAttribute("page", responseBook.getBody().getPage()); //  pageをModelに格納
-				model.addAttribute("allPages", responseBook.getBody().getAllPages()); //  allPagesをModelに格納
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
-			}
-					
 			if(keyword == "") { // keywordが指定されていない場合はトップページに戻る
 				logger.log(Level.INFO, "Redirect to /?user=" + user + ".(keyword = null)");
 				return "redirect:/" + "?user=" + user;
+				
+			} else { // keywordが指定されていれば検索処理実行
+			
+				model.addAttribute("user", user); // userをModelに格納
+				model.addAttribute("keyword", keyword); // keywordをModelに格納
+						
+				int showFlag = 2; // Book表示フラグ
+				model.addAttribute("showFlag", showFlag); // showFlagをModelに格納
+		
+				try {
+					logger.log(Level.INFO, "Search keyword=" + keyword + " and get BookList.(keyword = " + keyword + ", page = " + page + ")");
+					ResponseEntity<BookList> responseBook = searchBookListPageApi(user, keyword, page); // Book検索API実行メソッド
+					logger.log(Level.INFO, "BookList has returned.(page = " + page + ")");
+					
+					model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
+					model.addAttribute("page", responseBook.getBody().getPage()); //  pageをModelに格納
+					model.addAttribute("allPages", responseBook.getBody().getAllPages()); //  allPagesをModelに格納
+				}
+				catch (Exception e) {
+					// エラーでも画面表示できるように空のレスポンスを返す
+					BookList bookList = new BookList();
+					ResponseEntity<BookList> responseBook = new ResponseEntity<BookList>(bookList, HttpStatus.INTERNAL_SERVER_ERROR);
+					
+					model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
+					model.addAttribute("page", responseBook.getBody().getPage()); //  pageをModelに格納
+					model.addAttribute("allPages", responseBook.getBody().getAllPages()); //  allPagesをModelに格納
+				}
+				logger.log(Level.INFO, "Return home page and show BookList. (keyword = " + keyword + ", page = " + page + ")");
+				return "home";
 			}
-			logger.log(Level.INFO, "Return home page and show bookList. (page = " + page + ")");
-			return "home";
 		}
 		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
 			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
-		} 
+		}
 	}
 	
 	// Book詳細画面表示
@@ -199,99 +176,37 @@ public class BookReviewBFFController {
 			
 			model.addAttribute("user", user); // userをModelに格納
 			
-			logger.log(Level.INFO, "Get Book.");
-
-			bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
-			
-			try {
-			// Book取得API
-			logger.log(Level.INFO, "[Book API] Request to Book API.");
-			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
-			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, Book.class);
-			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
-			
-			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-				
-				// エラーでも画面表示できるように空のbookをModelに格納
-				Book book = new Book();
-				model.addAttribute("book", book); 
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-				
-				// エラーでも画面表示できるように空のbookをModelに格納
-				Book book = new Book();
-				model.addAttribute("book", book); 
+			try { // Book取得API
+				logger.log(Level.INFO, "Get Book.(bookid = " + bookid + ")");
+				ResponseEntity<Book> responseBook = getBookApi(user, bookid);// Book取得API実行メソッド
+				logger.log(Level.INFO, "Book has returned.(bookid = " + bookid + ")");
+				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
 			}
 			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
-				
-				// エラーでも画面表示できるように空のbookをModelに格納
+				// エラーでも画面表示できるように空のレスポンスを返す
 				Book book = new Book();
-				model.addAttribute("book", book); 
+				ResponseEntity<Book> responseBook = new ResponseEntity<Book>(book, HttpStatus.INTERNAL_SERVER_ERROR);
+				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
 			}
-			
-			logger.log(Level.INFO, "Get ReviewList.");
-
-			reviewRequestUrl = REVIEW_API_URL + "?user=" + user + "&bookid=" + bookid;
-			
-			try {
-				// Review一覧取得API
-				logger.log(Level.INFO, "[Review API] Request to Review API.");
-				logger.log(Level.INFO, "[Review API] GET " + reviewRequestUrl);
-				ResponseEntity<ReviewList> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.GET, null, ReviewList.class);
-				logger.log(Level.INFO, "[Review API] ReviewList has returned from Review API.");
-			
+		
+			try { // ReviewList取得API
+				logger.log(Level.INFO, "Get ReviewList.(bookid = " + bookid + ")");
+				ResponseEntity<ReviewList> responseReview = getReviewList(user, bookid);// ReviewList取得API実行メソッド
+				logger.log(Level.INFO, "ReviewList has returned.(bookid = " + bookid + ")");
 				model.addAttribute("reviewList", responseReview.getBody().getReviewListPage()); // reviewListをModelに格納
 			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
 			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + reviewRequestUrl);
+				// エラーでも画面表示できるように空のレスポンスを返す
+				ReviewList reviewList = new ReviewList();
+				ResponseEntity<ReviewList> responseReview = new ResponseEntity<ReviewList>(reviewList, HttpStatus.INTERNAL_SERVER_ERROR);
+				model.addAttribute("reviewList", responseReview.getBody().getReviewListPage());
 			}
 			
-//			logger.log(Level.INFO, "Get TotalEvaluation.");
-//			
-//			reviewRequestUrl = REVIEW_API_URL + "/totalevaluation?user=" + user + "&bookid=" + bookid;
-//			
-//			try {
-//				// TotalEvaluation取得API
-//				logger.log(Level.INFO, "[Review API] Request to Review API.");
-//				logger.log(Level.INFO, "[Review API] GET " + reviewRequestUrl);
-//				ResponseEntity<TotalEvaluation> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.GET, null, TotalEvaluation.class);
-//				logger.log(Level.INFO, "[Review API] TotalEvaluation has returned from Review API.");
-//			
-//				model.addAttribute("totalEvaluation", responseReview.getBody().getValue()); // reviewListをModelに格納
-//			}
-//			catch (HttpClientErrorException e) {
-//				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-//				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-//			}
-//			catch (HttpServerErrorException e) {
-//				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-//				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-//			}
-//			catch (Exception e) {
-//				logger.log(Level.SEVERE, "Catch Exception");
-//				logger.log(Level.SEVERE, "Unable access to " + "GET " + reviewRequestUrl);
-//			}
-			logger.log(Level.INFO, "Return book page and show reviewList. (bookid = " + bookid + ")");
+			logger.log(Level.INFO, "Return Book page and show ReviewList. (bookid = " + bookid + ")");
 			return "detail";
 		}
 		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
 			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		} 
@@ -312,6 +227,7 @@ public class BookReviewBFFController {
 			return "editbook";
 		}
 		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
 			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		} 
@@ -328,36 +244,24 @@ public class BookReviewBFFController {
 			boolean editFlag = true; // 編集フラグ（false:新規, true:編集）
 			model.addAttribute("editFlag", editFlag); // editFlagをModelに格納
 			
-			logger.log(Level.INFO, "Get Book.");
-			
-			bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
-			
 			try {
-				// Book取得API
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
-				ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, Book.class);
-				logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
-				
+				logger.log(Level.INFO, "Get Book.(bookid = " + bookid + ")");
+				ResponseEntity<Book> responseBook = getBookApi(user, bookid);// Book取得API実行メソッド
+				logger.log(Level.INFO, "Book has returned.(bookid = " + bookid + ")");
+				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納	
+			}
+			catch(Exception e) {
+				// エラーでも画面表示できるように空のレスポンスを返す
+				Book book = new Book();
+				ResponseEntity<Book> responseBook = new ResponseEntity<Book>(book, HttpStatus.INTERNAL_SERVER_ERROR);
 				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
 			}
 			
 			logger.log(Level.INFO, "Return editbook.(editFlag =" + editFlag + ")");
 			return "editbook";
 		}	
 		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
 			logger.log(Level.SEVERE, "Internal Server Error");
 			throw e;
 		} 
@@ -381,47 +285,22 @@ public class BookReviewBFFController {
 			postBook.setOverview(overview);
 			
 			logger.log(Level.INFO, "Insert book.");
+			ResponseEntity<Book> responseBook = postBookInsertApi(postBook); // Book新規登録API実行メソッド
+			logger.log(Level.INFO, "Book has returned.(bookid = " + responseBook.getBody().getId() + ")");
+			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
 			
-			bookRequestUrl = BOOK_API_URL + "/insert";
+			redirectAttributes.addFlashAttribute("complete", "本の登録が完了しました。"); // リダイレクト時のパラメータを設定する（登録成功メッセージ）
+			logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "?user=" + user);
+			return "redirect:/book/" + responseBook.getBody().getId() + "?user=" + user; // 登録したBookの詳細ページを返す
+
+		}	
+		catch (Exception e) { // Book新規登録API実行メソッドでエラーが発生した場合はhome画面にリダイレクト
+			logger.log(Level.SEVERE, "Internal Server Error");
 			
-			try {
-				// Book新規登録API
-				// Book APIでBook登録（リクエストBodyとしてPostBookを渡す）
-				HttpEntity<PostBook> entity = new HttpEntity<>(postBook, null);
-				
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] POST " + bookRequestUrl);
-				ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.POST, entity, Book.class);
-				logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
-				
-				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
-				
-				redirectAttributes.addFlashAttribute("complete", "本の登録が完了しました。"); // リダイレクト時のパラメータを設定する（登録成功メッセージ）
-				logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "?user=" + user);
-				return "redirect:/book/" + responseBook.getBody().getId() + "?user=" + user; // 登録したBookの詳細ページを返す
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + bookRequestUrl);
-			}
-			
-			// Book新規登録APIでエラーが失敗した場合はhomeにリダイレクト
+			// homeにリダイレクト
 			redirectAttributes.addFlashAttribute("complete", "本の登録に失敗しました。"); // リダイレクト時のパラメータを設定する（登録失敗メッセージ）
 			logger.log(Level.INFO, "Redirect to /?user=" + user);
 			return "redirect:/?user=" + user;
-
-		}	
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "Internal Server Error");
-			throw e;
 		} 
 	}
 	
@@ -443,47 +322,22 @@ public class BookReviewBFFController {
 			postBook.setTitle(title);
 			postBook.setOverview(overview);
 			
-			logger.log(Level.INFO, "Update book.");
+			logger.log(Level.INFO, "Update book.(bookid = " + bookid + ")");
+			ResponseEntity<Book> responseBook = postBookUpdateApi(bookid, postBook); // Book更新API実行メソッド
+			logger.log(Level.INFO, "Book has returned.(bookid = " + responseBook.getBody().getId() + ")");
+			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
 			
-			bookRequestUrl = BOOK_API_URL + "/" + bookid + "/update";
-			
-			try {
-				// APIリクエスト実行
-				// Book APIでBook更新（リクエストBodyとしてPostBookを渡す）
-				HttpEntity<PostBook> entity = new HttpEntity<>(postBook, null);
-				
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] POST " + bookRequestUrl);
-				ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.POST, entity, Book.class);
-				logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
-				
-				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
-				
-				redirectAttributes.addFlashAttribute("complete", "本の更新が完了しました。"); // リダイレクト時のパラメータを設定する（更新成功メッセージ）
-				logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "/detail/?user=" + user);
-				return "redirect:/book/" + responseBook.getBody().getId() + "?user=" + user; // 登録したBookの詳細ページを返す
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + bookRequestUrl);
-			}
-			// Book新規登録APIでエラーが失敗した場合はhomeにリダイレクト
-			redirectAttributes.addFlashAttribute("complete", "本の更新に失敗しました。"); // リダイレクト時のパラメータを設定する（更新失敗メッセージ）
-			logger.log(Level.INFO, "Redirect to /?user=" + user);
-			return "redirect:/?user=" + user;
-			
+			redirectAttributes.addFlashAttribute("complete", "本の更新が完了しました。"); // リダイレクト時のパラメータを設定する（更新成功メッセージ）
+			logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "/detail/?user=" + user);
+			return "redirect:/book/" + responseBook.getBody().getId() + "?user=" + user; // 登録したBookの詳細ページを返す
+
 		}
-		catch (Exception e) {
+		catch (Exception e) { // Book更新API実行メソッドでエラーが発生した場合はdetail画面にリダイレクト
 			logger.log(Level.SEVERE, "Internal Server Error");
-			throw e;
+			
+			redirectAttributes.addFlashAttribute("complete", "本の更新に失敗しました。"); // リダイレクト時のパラメータを設定する（更新失敗メッセージ）
+			logger.log(Level.INFO, "Redirect to /book/" + bookid + "?user=" + user);
+			return "redirect:/book/" + bookid + "?user=" + user;
 		} 
 	}
 	
@@ -496,41 +350,20 @@ public class BookReviewBFFController {
 			model.addAttribute("user", user); // userをModelに格納
 			
 			logger.log(Level.INFO, "Delete book.(bookid = " + bookid + ")");
+			deleteBookApi(user, bookid); // Book削除API実行メソッド
 			
-			bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
+			redirectAttributes.addFlashAttribute("complete", "対象の本の削除が完了しました。"); // リダイレクト時のパラメータを設定する（削除完了メッセージ）
+			logger.log(Level.INFO, "redirect:/?user=" + user);
+			return "redirect:/" + "?user=" + user;
+
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Internal Server Error");
 			
-			try {
-				// Book削除API
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] DELETE " + bookRequestUrl);
-				ResponseEntity<Void> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.DELETE, null, Void.class);
-				logger.log(Level.INFO, "[Book API] Book has deleted.");
-				
-				redirectAttributes.addFlashAttribute("complete", "対象の本の削除が完了しました。"); // リダイレクト時のパラメータを設定する（削除完了メッセージ）
-				logger.log(Level.INFO, "redirect:/?user=" + user);
-				return "redirect:/" + "?user=" + user;
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "DELETE " + bookRequestUrl);
-			}
 			// Book削除APIでエラーが失敗した場合はhomeにリダイレクト
 			redirectAttributes.addFlashAttribute("complete", "本の削除に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
 			logger.log(Level.INFO, "Redirect to /?user=" + user);
 			return "redirect:/?user=" + user;
-			
-		}
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "Internal Server Error");
-			throw e;
 		} 
 	}
 
@@ -543,44 +376,20 @@ public class BookReviewBFFController {
 			model.addAttribute("user", user); // userをModelに格納
 			model.addAttribute("bookid", bookid); // BookのidをModelに格納
 			
-			logger.log(Level.INFO, "Get Book.");
-			
-			bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
-			
-			try {
-				// Book取得API
-				logger.log(Level.INFO, "[Book API] Request to Book API.");
-				logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
-				ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, Book.class);
-				logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
-				
-				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
-				
-				logger.log(Level.INFO, "Return newreview.");
-				return "newreview";
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "GET " + bookRequestUrl);
-			}
-			
+			logger.log(Level.INFO, "Get Book.(bookid = " + bookid + ")");
+			ResponseEntity<Book> responseBook = getBookApi(user, bookid);// Book取得API実行メソッド
+			logger.log(Level.INFO, "Book has returned.(bookid = " + bookid + ")");
+			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納	
+		
+			logger.log(Level.INFO, "Return newreview.");
+			return "newreview";
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Internal Server Error");
 			// Book取得APIでエラーが失敗した場合はhomeにリダイレクト
 			redirectAttributes.addFlashAttribute("complete", "対象の本の情報が取得できませんでした。"); // リダイレクト時のパラメータを設定する（Book取得失敗メッセージ）
 			logger.log(Level.INFO, "Redirect to /?user=" + user);
 			return "redirect:/?user=" + user;
-
-		}
-		catch (Exception e) {
-			logger.log(Level.SEVERE, "Internal Server Error");
-			throw e;
 		} 
 	}
 	
@@ -605,43 +414,21 @@ public class BookReviewBFFController {
 			postReview.setBookid(bookid);
 			postReview.setUserid(userid);
 			
-			logger.log(Level.INFO, "Insert Review.");
+			logger.log(Level.INFO, "Insert Review.(bookid = " + bookid + ")");
+			postReviewApi(postReview); // Review新規登録API実行メソッド
+			logger.log(Level.INFO, "Review has inserted.(bookid = " + bookid + ")");
 			
-			reviewRequestUrl = REVIEW_API_URL + "/insert";
-			
-			try {
-				// Review登録API
-				HttpEntity<PostReview> entity = new HttpEntity<>(postReview, null);
-				
-				logger.log(Level.INFO, "[Review API] Request to Review API.");
-				logger.log(Level.INFO, "[Review API] POST " + reviewRequestUrl);
-				ResponseEntity<Review> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.POST, entity, Review.class);
-				logger.log(Level.INFO, "[Review API] Review has returned from Review API.");
-				
-				redirectAttributes.addFlashAttribute("complete", "レビューの登録が完了しました。"); // リダイレクト時のパラメータを設定する（登録完了メッセージ）
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-				redirectAttributes.addFlashAttribute("complete", "レビューの登録に失敗しました。"); // リダイレクト時のパラメータを設定する（登録失敗メッセージ）
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-				redirectAttributes.addFlashAttribute("complete", "レビューの登録に失敗しました。"); // リダイレクト時のパラメータを設定する（登録失敗メッセージ）
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "POST " + reviewRequestUrl);
-				redirectAttributes.addFlashAttribute("complete", "レビューの登録に失敗しました。"); // リダイレクト時のパラメータを設定する（登録失敗メッセージ）
-			}
+			redirectAttributes.addFlashAttribute("complete", "レビューの登録が完了しました。"); // リダイレクト時のパラメータを設定する（登録完了メッセージ）
 			logger.log(Level.INFO, "Redirect to /book/" + bookid + "?user=" + user);
 			return "redirect:/book/" + bookid + "?user=" + user;
-
+			
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Internal Server Error");
-			throw e;
+			
+			redirectAttributes.addFlashAttribute("complete", "レビューの登録に失敗しました。"); // リダイレクト時のパラメータを設定する（登録失敗メッセージ）
+			logger.log(Level.INFO, "Redirect to /book/" + bookid + "?user=" + user);
+			return "redirect:/book/" + bookid + "?user=" + user;
 		} 
 	}
 	
@@ -654,65 +441,42 @@ public class BookReviewBFFController {
 			model.addAttribute("user", user); // userをModelに格納
 			
 			logger.log(Level.INFO, "Delete Review.(reviewid =" + reviewid + ")");
+			deleteReviewApi(user, reviewid); // Review削除API実行メソッド
+			logger.log(Level.INFO, "Review has deleted.(reviewid =" + reviewid + ")");
 			
-			reviewRequestUrl = REVIEW_API_URL + "/" + reviewid + "?user=" + user;
-			
-			try {
-				// Review削除API
-				logger.log(Level.INFO, "[Review API] Request to Review API.");
-				logger.log(Level.INFO, "[Review API] DELETE " + reviewRequestUrl);
-				ResponseEntity<Void> reviewResponseBook = restTemplate.exchange(reviewRequestUrl, HttpMethod.DELETE, null, Void.class);
-				logger.log(Level.INFO, "[Review API] Review has deleted.(reviewid = "+ reviewid + ")");
-				
-				redirectAttributes.addFlashAttribute("complete", "対象レビューの削除が完了しました。"); // リダイレクト時のパラメータを設定する（削除完了メッセージ）
-			}
-			catch (HttpClientErrorException e) {
-				logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-				redirectAttributes.addFlashAttribute("complete", "レビューの削除に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
-			}
-			catch (HttpServerErrorException e) {
-				logger.log(Level.SEVERE, "Catch HttpServerErrorException");
-				logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
-				redirectAttributes.addFlashAttribute("complete", "レビューの削除に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
-			}
-			catch (Exception e) {
-				logger.log(Level.SEVERE, "Catch Exception");
-				logger.log(Level.SEVERE, "Unable access to " + "DELETE " + reviewRequestUrl);
-				redirectAttributes.addFlashAttribute("complete", "レビューの登録に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
-			}
-	
+			redirectAttributes.addFlashAttribute("complete", "対象レビューの削除が完了しました。"); // リダイレクト時のパラメータを設定する（削除完了メッセージ）
 			logger.log(Level.INFO, "Redirect to /book/" + bookid + "/detail?user=" + user);
 			return "redirect:/book/" + bookid + "?user=" + user;
+			
 		}
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Internal Server Error");
-			throw e;
+			redirectAttributes.addFlashAttribute("complete", "レビューの削除に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
+			logger.log(Level.INFO, "Redirect to /book/" + bookid + "/detail?user=" + user);
+			return "redirect:/book/" + bookid + "?user=" + user;
 		} 
 	}
 	
-	
-	
-	// Book取得API実行メソッド
-	// [Book API] GET /api/book/{bookid}
-	ResponseEntity<Book> getBookApi(String user, int bookid) {
-		String bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
-	
+	// -------------------------------------------
+	// Book一覧取得API実行メソッド
+	// [Book API] GET /api/book	
+	ResponseEntity<BookList> getBookListApi(String user) {
 		try {
-			// Book取得API
-			logger.log(Level.INFO, "[Book API] Request to Book API.");
-			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
-			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, Book.class);
-			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
+			bookRequestUrl = BOOK_API_URL + "?user=" + user;
 			
+			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
+			ResponseEntity<BookList> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, BookList.class);
+			logger.log(Level.INFO, "[Book API] BookList has returned from Book API.");
 			return responseBook;
 		}
 		catch (HttpClientErrorException e) {
 			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			throw e;
 		}
 		catch (HttpServerErrorException e) {
 			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			throw e;
 		}
 		catch (Exception e) {
@@ -722,16 +486,99 @@ public class BookReviewBFFController {
 		}
 	}
 	
-	// Book更新API実行メソッド
-	// [Book API] POST /api/book/{bookid}/update
-	ResponseEntity<Book> postBookUpdateApi(String user, int bookid, PostBook postBook) {
-		String bookRequestUrl = BOOK_API_URL + "/" + bookid + "/update";
-		
+	// Book一覧取得API実行メソッド（ページ指定）
+	// [Book API] GET /api/book?page={page}
+	ResponseEntity<BookList> getBookListPageApi(String user, int page) {
 		try {
-			// Book更新API実行
-			HttpEntity<PostBook> entity = new HttpEntity<>(postBook, null);
+			bookRequestUrl = BOOK_API_URL + "?user=" + user + "&page=" + page;
 			
-			logger.log(Level.INFO, "[Book API] Request to Book API.");
+			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
+			ResponseEntity<BookList> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, BookList.class);
+			logger.log(Level.INFO, "[Book API] BookList has returned from Book API.");
+			return responseBook;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Catch Exception");
+			logger.log(Level.SEVERE, "[Book API] Unable access to " + "GET " + bookRequestUrl);
+			throw e;
+		}
+	}
+	
+	// Book検索API実行メソッド
+	// [Book API] GET /api/book/search
+	ResponseEntity<BookList> searchBookListPageApi(String user, String keyword, int page) {
+		try {
+			bookRequestUrl = BOOK_API_URL + "/search?user=" + user + "&keyword=" + keyword + "&page=" + page;
+			
+			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
+			ResponseEntity<BookList> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, BookList.class);
+			logger.log(Level.INFO, "[Book API] BookList has returned from Book API.");
+			return responseBook;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Catch Exception");
+			logger.log(Level.SEVERE, "[Book API] Unable access to " + "GET " + bookRequestUrl);
+			throw e;
+		}
+	}
+	
+	// Book取得API実行メソッド
+	// [Book API] GET /api/book/{bookid}
+	ResponseEntity<Book> getBookApi(String user, int bookid) {
+		try {
+			bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
+			
+			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
+			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, Book.class);
+			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
+			
+			return responseBook;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Catch Exception");
+			logger.log(Level.SEVERE, "[Book API] Unable access to " + "GET " + bookRequestUrl);
+			throw e;
+		}
+	}
+	
+	// Book新規登録API
+	// [Book API] POST /api/book/insert
+	ResponseEntity<Book> postBookInsertApi(PostBook postBook){
+		try {
+			bookRequestUrl = BOOK_API_URL + "/insert";
+			
+			HttpEntity<PostBook> entity = new HttpEntity<>(postBook, null);
+		
 			logger.log(Level.INFO, "[Book API] POST " + bookRequestUrl);
 			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.POST, entity, Book.class);
 			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
@@ -740,10 +587,43 @@ public class BookReviewBFFController {
 		}
 		catch (HttpClientErrorException e) {
 			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			throw e;
 		}
 		catch (HttpServerErrorException e) {
 			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Catch Exception");
+			logger.log(Level.SEVERE, "[Book API] Unable access to " + "GET " + bookRequestUrl);
+			throw e;
+		}
+	}
+
+	// Book更新API実行メソッド
+	// [Book API] POST /api/book/{bookid}/update
+	ResponseEntity<Book> postBookUpdateApi(int bookid, PostBook postBook) {
+		try {
+			bookRequestUrl = BOOK_API_URL + "/" + bookid + "/update";
+			
+			HttpEntity<PostBook> entity = new HttpEntity<>(postBook, null);
+			
+			logger.log(Level.INFO, "[Book API] POST " + bookRequestUrl);
+			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.POST, entity, Book.class);
+			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
+			
+			return responseBook;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
 			throw e;
 		}
 		catch (Exception e) {
@@ -753,8 +633,122 @@ public class BookReviewBFFController {
 		}
 	}
 	
-	// Review一覧取得API実行メソッド
+	// Book削除API
+	// [Book API] DELETE /api/book/{bookid}
+	void deleteBookApi(String user, int bookid) {
+		try {
+			bookRequestUrl = BOOK_API_URL + "/" + bookid + "?user=" + user;
+			
+			logger.log(Level.INFO, "[Book API] Request to Book API.");
+			logger.log(Level.INFO, "[Book API] DELETE " + bookRequestUrl);
+			ResponseEntity<Void> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.DELETE, null, Void.class);
+			logger.log(Level.INFO, "[Book API] Book has deleted.");
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Book API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Book API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Book API] Catch Exception");
+			logger.log(Level.SEVERE, "[Book API] Unable access to " + "DELETE " + bookRequestUrl);
+			throw e;
+		}
+	}
 	
+
+	// Review一覧取得API実行メソッド
+	// [Review API] GET /api/review
+	ResponseEntity<ReviewList> getReviewList(String user, int bookid) {
+		try {
+			reviewRequestUrl = REVIEW_API_URL + "?user=" + user + "&bookid=" + bookid;
+			
+			logger.log(Level.INFO, "[Review API] GET " + reviewRequestUrl);
+			ResponseEntity<ReviewList> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.GET, null, ReviewList.class);
+			logger.log(Level.INFO, "[Review API] ReviewList has returned from Review API.");
+			
+			return responseReview;
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Unable access to " + "GET " + reviewRequestUrl);
+			throw e;
+		}
+	}
+	
+	// Review新規登録API
+	// [Review API] POST /api/review/insert
+	void postReviewApi(PostReview postReview) {
+		try {
+			reviewRequestUrl = REVIEW_API_URL + "/insert";
+			
+			HttpEntity<PostReview> entity = new HttpEntity<>(postReview, null);
+			
+			logger.log(Level.INFO, "[Review API] POST " + reviewRequestUrl);
+			ResponseEntity<Review> responseReview = restTemplate.exchange(reviewRequestUrl, HttpMethod.POST, entity, Review.class);
+			logger.log(Level.INFO, "[Review API] Review has returned from Review API.");
+
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "[Review API] Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "[Review API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "[Review API] Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "[Review API] Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "[Review API] Catch Exception");
+			logger.log(Level.SEVERE, "[Review API] Unable access to " + "POST " + reviewRequestUrl);
+			throw e;
+		}
+	}
+
+	// Review削除API
+	// [Review API] DELETE /api/review/{reviewid}
+	void deleteReviewApi(String user, int reviewid) {
+		try {
+			reviewRequestUrl = REVIEW_API_URL + "/" + reviewid + "?user=" + user;
+			
+			logger.log(Level.INFO, "[Review API] Request to Review API.");
+			logger.log(Level.INFO, "[Review API] DELETE " + reviewRequestUrl);
+			ResponseEntity<Void> reviewResponseBook = restTemplate.exchange(reviewRequestUrl, HttpMethod.DELETE, null, Void.class);
+			logger.log(Level.INFO, "[Review API] Review has deleted.(reviewid = "+ reviewid + ")");
+
+		}
+		catch (HttpClientErrorException e) {
+			logger.log(Level.SEVERE, "Catch  HttpClientErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (HttpServerErrorException e) {
+			logger.log(Level.SEVERE, "Catch HttpServerErrorException");
+			logger.log(Level.SEVERE, "Status: " + e.getRawStatusCode() + " Body: " + e.getResponseBodyAsString());
+			throw e;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Catch Exception");
+			logger.log(Level.SEVERE, "Unable access to " + "DELETE " + reviewRequestUrl);
+			throw e;
+		}
+	}
 	
 	
 	// TotalEvaluation取得API実行メソッド

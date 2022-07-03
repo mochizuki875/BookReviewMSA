@@ -146,7 +146,7 @@ public class BookAPIController {
 		try {
 			logger.log(Level.INFO, "GET /api/book/" + bookid + "?user=" + user);
 			
-			logger.log(Level.INFO, "Get book.(bookid = " + bookid + ")");
+			logger.log(Level.INFO, "Get Book.(bookid = " + bookid + ")");
 			logger.log(Level.FINE, "bookService.selectOneById(" + bookid + ")");
 			Optional<Book> bookOpt = bookService.selectOneById(bookid); // bookidからBookを取得
 			if(bookOpt.isPresent()) {
