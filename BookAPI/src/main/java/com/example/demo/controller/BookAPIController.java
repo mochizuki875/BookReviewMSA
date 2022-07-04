@@ -310,7 +310,6 @@ public class BookAPIController {
 	
 		try {
 			// ReviewAPI
-			logger.log(Level.INFO, "[Review API] Request to Review API.");
 			logger.log(Level.INFO, "[Review API] DELETE " + reviewRequestUrl);
 			ResponseEntity<Book> responseBook = restTemplate.exchange(reviewRequestUrl, HttpMethod.DELETE, null, Book.class);
 			logger.log(Level.INFO, "[Review API] All reviews related to bookid = " + bookid + " has deleted.");

@@ -571,7 +571,7 @@ public class BookReviewBFFController {
 		}
 	}
 	
-	// Book新規登録API
+	// Book新規登録API実行メソッド
 	// [Book API] POST /api/book/insert
 	ResponseEntity<Book> postBookInsertApi(PostBook postBook){
 		try {
@@ -727,7 +727,6 @@ public class BookReviewBFFController {
 		try {
 			reviewRequestUrl = REVIEW_API_URL + "/" + reviewid + "?user=" + user;
 			
-			logger.log(Level.INFO, "[Review API] Request to Review API.");
 			logger.log(Level.INFO, "[Review API] DELETE " + reviewRequestUrl);
 			ResponseEntity<Void> reviewResponseBook = restTemplate.exchange(reviewRequestUrl, HttpMethod.DELETE, null, Void.class);
 			logger.log(Level.INFO, "[Review API] Review has deleted.(reviewid = "+ reviewid + ")");

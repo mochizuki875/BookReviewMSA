@@ -15,7 +15,7 @@ public interface ReviewService {
 	void deleteOneById(int id);
 
 	// Reviewを1件登録
-	void insertOne(Review review);
+	Review insertOne(Review review);
 	
 	// bookidを指定してReviewを全件取得
 	Iterable<Review> selectAllByBookId(int bookid);

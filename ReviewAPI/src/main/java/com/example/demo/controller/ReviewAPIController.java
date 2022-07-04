@@ -97,7 +97,7 @@ public class ReviewAPIController {
 			// bookidに対応するBookを取得（Review登録対象のBookが存在するかを確認）
 			logger.log(Level.INFO, "Get Book.(bookid=" + bookid + ")");
 			ResponseEntity<Book> responseBook = getBookApi(user, bookid);
-			logger.log(Level.INFO, "Success to get Book.");
+			logger.log(Level.INFO, "Success to get Book.(bookid = " + bookid + ")");
 			
 			// Reviewを作成
 			logger.log(Level.INFO, "Create Review instance.");
@@ -110,8 +110,8 @@ public class ReviewAPIController {
 			// Reviewを登録
 			logger.log(Level.INFO, "Insert Review.");
 			logger.log(Level.FINE, "reviewService.insertOne(" + review + ")");
-			reviewService.insertOne(review);
-			logger.log(Level.INFO, "Success to insert Review.");
+			review = reviewService.insertOne(review);
+			logger.log(Level.INFO, "Success to insert Review.(reviewid = " + review.getId() + ")");
 			
 			// 対象bookidのtotalevaluationを算出
 			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
@@ -269,7 +269,6 @@ public class ReviewAPIController {
 	
 		try {
 			// Book取得API
-			logger.log(Level.INFO, "[Book API] Request to Book API.");
 			logger.log(Level.INFO, "[Book API] GET " + bookRequestUrl);
 			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.GET, null, Book.class);
 			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
@@ -300,7 +299,6 @@ public class ReviewAPIController {
 			// Book更新API実行
 			HttpEntity<PostBook> entity = new HttpEntity<>(postBook, null);
 			
-			logger.log(Level.INFO, "[Book API] Request to Book API.");
 			logger.log(Level.INFO, "[Book API] POST " + bookRequestUrl);
 			ResponseEntity<Book> responseBook = restTemplate.exchange(bookRequestUrl, HttpMethod.POST, entity, Book.class);
 			logger.log(Level.INFO, "[Book API] Book has returned from Book API.");
