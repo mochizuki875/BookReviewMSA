@@ -4,6 +4,7 @@ metadata:
   labels:
     app: bookreview
   name: book-api
+  namespace: bookreview-msa
 spec:
   replicas: 1
   selector:
@@ -15,16 +16,18 @@ spec:
         app: book-api
     spec:
       containers:
-      - image: ghcr.io/mochizuki875/bookreview:otel
+      - image: ghcr.io/mochizuki875/book-api:v1.0
         name: book-api
         imagePullPolicy: Always
         env:
         - name: buildEnv
           value: prod
         - name: SERVER_PORT
-          value: 8080
+          value: "8080"
+        - name: JAVA_TOOL_OPTIONS
+          value: "-javaagent:otel.jar"
         - name: REVIEW_API_URL
-          value: http://review-api/api/review
+          value: http://review-api:8080/api/review
         - name: SPRING_DATASOURCE_URL
           value: jdbc:postgresql://bookreview-postgres-cluster-primary.default.svc:5432/bookreview
         - name: SPRING_DATASOURCE_USERNAME
@@ -71,6 +74,7 @@ metadata:
   labels:
     app: bookreview
   name: book-api
+  namespace: bookreview-msa
 spec:
   selector:
     app: book-api
