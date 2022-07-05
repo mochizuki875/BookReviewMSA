@@ -1,0 +1,33 @@
+version: '3'
+services:
+  bff:
+    image: bookreview-bff:v1.0
+    ports:
+      - "8080:8080"
+    environment:
+      - buildEnv=dev
+      - SERVER_PORT=8080
+      - BOOK_API_URL=http://book-api:8080/api/book
+      - REVIEW_API_URL=http://review-api:8080/api/review
+      - JAVA_TOOL_OPTIONS="-javaagent:otel.jar"
+      - OTEL_SERVICE_NAME=BookReview-bff
+  book-api:
+    image: book-api:v1.0
+    ports:
+      - "8082:8080"
+    environment:
+      - buildEnv=dev
+      - SERVER_PORT=8080
+      - REVIEW_API_URL=http://review-api:8080/api/review
+      - JAVA_TOOL_OPTIONS="-javaagent:otel.jar"
+      - OTEL_SERVICE_NAME=Book-Api
+  review-api:
+    image: review-api:v1.0
+    ports:
+      - "8083:8080"
+    environment:
+      - buildEnv=dev
+      - SERVER_PORT=8080
+      - BOOK_API_URL=http://book-api:8080/api/book
+      - JAVA_TOOL_OPTIONS="-javaagent:otel.jar"
+      - OTEL_SERVICE_NAME=Review-Api

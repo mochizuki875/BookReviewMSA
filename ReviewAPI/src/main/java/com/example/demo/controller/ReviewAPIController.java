@@ -38,7 +38,8 @@ public class ReviewAPIController {
 	final int TOP_NUMBER = 10; // トップページの表示件数
 	final int PAGE_SIZE = 10; // 1ページあたりの表示件数
 	
-	final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
+	// final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
+	final String BOOK_API_URL = System.getenv("BOOK_API_URL");
 	
 	// Service作成
 	@Autowired

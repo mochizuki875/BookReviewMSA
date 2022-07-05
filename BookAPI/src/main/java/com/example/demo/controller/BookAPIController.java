@@ -33,7 +33,8 @@ public class BookAPIController {
 	final int TOP_NUMBER = 10; // トップページの表示件数
 	final int PAGE_SIZE = 10; // 1ページあたりの表示件数
 	
-	final String REVIEW_API_URL = "http://127.0.0.1:8083/api/review"; // Review APIのURL
+	// final String REVIEW_API_URL = "http://127.0.0.1:8083/api/review"; // Review APIのURL
+	final String REVIEW_API_URL = System.getenv("REVIEW_API_URL"); // Review APIのURL
 	
 	// RestTemplateインスタンス作成
 	RestTemplate restTemplate = new RestTemplate();

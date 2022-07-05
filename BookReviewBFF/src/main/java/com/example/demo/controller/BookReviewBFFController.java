@@ -31,8 +31,11 @@ import com.example.demo.entity.ReviewList;
 @Controller
 @RequestMapping
 public class BookReviewBFFController {
-	final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
-	final String REVIEW_API_URL = "http://127.0.0.1:8083/api/review"; // Review APIのURL
+	// final String BOOK_API_URL = "http://127.0.0.1:8082/api/book"; // Book APIのURL
+	// final String REVIEW_API_URL = "http://127.0.0.1:8083/api/review"; // Review APIのURL
+	
+	final String BOOK_API_URL = System.getenv("BOOK_API_URL"); // Book APIのURL
+	final String REVIEW_API_URL = System.getenv("REVIEW_API_URL"); // Review APIのURL
 
 	String bookRequestUrl;
 	String reviewRequestUrl;
@@ -126,7 +129,7 @@ public class BookReviewBFFController {
 		try {
 			logger.log(Level.INFO, "GET /book/search?user=" + user + "&keyword=" + keyword + "&page=" + page);
 			
-			if(keyword == "") { // keywordが指定されていない場合はトップページに戻る
+			if(keyword == "" | keyword == null) { // keywordが指定されていない場合はトップページに戻る
 				logger.log(Level.INFO, "Redirect to /?user=" + user + ".(keyword = null)");
 				return "redirect:/" + "?user=" + user;
 				
