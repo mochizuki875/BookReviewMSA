@@ -1,48 +1,5 @@
-# BookReview
-BookReview is Spring Boot Web Application that provides a service for posting book information and reviews.
-
-## Prerequisites
-
-```
-openjdk version "11.0.2" 2019-01-15
-OpenJDK Runtime Environment 18.9 (build 11.0.2+9)
-OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)
-org.springframework.boot 2.6.7
-```
-
-## Quick Start
-Run Book Review application using in-memory database `H2`.
-
-```
-# ./gradlew bootRun
-```
-
-Alternatively, you can run using docker.
-
-```
-# docker run -d -p 8080:8080 --name bookreview ghcr.io/mochizuki875/bookreview:latest
-```
-
-Access `http://127.0.0.1:8080`.
-You can access H2 Console `http://127.0.0.1:8080/h2-console/` with below params.
-
-|Name         |Value                   |
-|:---         |:---                    |
-|Driver Class |`org.h2.Driver`         |
-|JDBC URL     |`jdbc:h2:mem:bookreview`|
-|User Name    |`sa`                    |
-|Password     |                        |
-
-
-## Configuration
-
-|Name                        |Description                                                                                   |Value|
-|:---                        |:---                                                                                          |:---|
-|`buildEnv`                  |If you set `prod`, using database(`PostgreSQL 14.x`) as application datastore.(Default: `dev`)|`dev`/`prod`|
-|`SPRING_DATASOURCE_URL`     |Set database URL.(Default: `jdbc:postgresql://localhost:5432/bookreview`)                     |`jdbc:postgresql://<Host Name>:<Port>/bookreview`|
-|`SPRING_DATASOURCE_USERNAME`|Set database user name.(Default: `postgres`)                                                  |`<USERNAME>`|
-|`SPRING_DATASOURCE_PASSWORD`|Set database user password.(Default: `postgres`)                                              |`<PASSWORD>`|
-|`JAVA_LOG_LEVEL`            |Set log level.(Default: `INFO`)                                                               |`TRACE`/`DEBUG`/`INFO`/`WARN`/`ERROR`/`FATAL`/`OFF`|
+# Review API
+Review API is one of the compornent of BookReview MSA.
 
 ## Run
 
@@ -54,12 +11,39 @@ or
 
 ```
 # ./gradlew build
-# java -jar build/libs/BookReview-0.0.1-SNAPSHOT.jar
+# java -jar build/libs/ReviewAPI-0.0.1-SNAPSHOT.jar
 ```
 
-## Docker
+You can access H2 Console `http://127.0.0.1:8080/h2-console/` with below params.
+
+|Name         |Value                   |
+|:---         |:---                    |
+|Driver Class |`org.h2.Driver`         |
+|JDBC URL     |`jdbc:h2:mem:bookreview`|
+|User Name    |`sa`                    |
+|Password     |                        |
+
+### Docker
 
 ```
-# docker build -t bookreview:1.0 .
-# docker run -d -p 8080:8080 --name bookreview bookreview:1.0
+# docker build -t review-api .
+# docker run -d -p 8080:8080 --name review-api review-api
 ```
+
+### Kubernetes
+
+```
+# kubectl apply -f Kubernetes/manifest.yaml
+```
+
+## Configuration
+
+|Name                        |Description                                                                                   |Value|
+|:---                        |:---                                                                                          |:---|
+|`buildEnv`                  |If you set `prod`, using database(`PostgreSQL 14.x`) as application datastore.(Default: `dev`)|`dev`/`prod`|
+|`SERVER_PORT`               |Set server port.(Default: `8080`)                                                             |`<Port>`|
+|`BOOK_API_URL`              |Set `Book API` URL.(ex `http://book-api:8080/api/book`)                                       |`http://<Book API Host Name>:<Book API Port>/api/book`|
+|`SPRING_DATASOURCE_URL`     |Set database URL.(Default: `jdbc:postgresql://localhost:5432/bookreview`)                     |`jdbc:postgresql://<Host Name>:<Port>/<Database Name>`|
+|`SPRING_DATASOURCE_USERNAME`|Set database user name.(Default: `postgres`)                                                  |`<USERNAME>`|
+|`SPRING_DATASOURCE_PASSWORD`|Set database user password.(Default: `postgres`)                                              |`<PASSWORD>`|
+|`JAVA_LOG_LEVEL`            |Set log level.(Default: `INFO`)                                                               |`TRACE`/`DEBUG`/`INFO`/`WARN`/`ERROR`/`FATAL`/`OFF`|

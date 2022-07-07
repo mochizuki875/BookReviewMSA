@@ -27,7 +27,7 @@ spec:
         - name: JAVA_TOOL_OPTIONS
           value: "-javaagent:otel.jar"
         - name: BOOK_API_URL
-          value: http://book-api:8080/api/review
+          value: http://book-api:8080/api/book
         - name: SPRING_DATASOURCE_URL
           value: jdbc:postgresql://bookreview-postgres-cluster-primary.default.svc:5432/bookreview
         - name: SPRING_DATASOURCE_USERNAME

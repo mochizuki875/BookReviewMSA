@@ -2,14 +2,15 @@
 
 # Java
 *.class
-*.jar
-*.war
+# *.jar
+# *.war
 *.ear
 
 # Eclipse
 .project
 .classpath
 .settings
+Servers
 
 # Idea
 .idea
@@ -37,3 +38,4 @@ bin
 *.log
 *.swp
 *.bak
+.gitignore
