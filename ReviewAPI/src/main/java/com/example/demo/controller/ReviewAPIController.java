@@ -115,9 +115,9 @@ public class ReviewAPIController {
 			logger.log(Level.INFO, "Success to insert Review.(reviewid = " + review.getId() + ")");
 			
 			// 対象bookidのtotalevaluationを算出
-			logger.log(Level.INFO, "Calculate totalEvaluation of bookid = " + bookid + ".");
+			logger.log(Level.INFO, "Calculate totalevaluation of bookid = " + bookid + ".");
 			double totalevaluation = reviewService.selectTotalEvaluationByBookId(bookid);
-			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
+			logger.log(Level.INFO, "totalevaluation = " + totalevaluation + ".");
 			logger.log(Level.INFO, "Success to calcurate totalevaluation.");
 			
 			// bookidに対応するBookのtotalevaluationを更新
@@ -179,10 +179,10 @@ public class ReviewAPIController {
 			logger.log(Level.INFO, "Success to delete Review.(reviewid = " + reviewid + ")");
 
 			// 対象bookidのtotalevaluationを算出
-			logger.log(Level.INFO, "Calculate totalEvaluation.(bookid = " + bookid + ")");
+			logger.log(Level.INFO, "Calculate totalevaluation.(bookid = " + bookid + ")");
 			// double totalevaluation = calcTotalevaluation(bookid);
 			double totalevaluation = reviewService.selectTotalEvaluationByBookId(bookid);
-			logger.log(Level.INFO, "totalEvaluation = " + totalevaluation + ".");
+			logger.log(Level.INFO, "totalevaluation = " + totalevaluation + ".");
 			logger.log(Level.INFO, "Success to calcurate totalevaluation.");
 
 			// bookidに対応するBookのtotalevaluationを更新

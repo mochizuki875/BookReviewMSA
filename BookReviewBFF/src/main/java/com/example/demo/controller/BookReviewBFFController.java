@@ -67,12 +67,13 @@ public class BookReviewBFFController {
 			}
 			catch(Exception e) {
 				// エラーでも画面表示できるように空のレスポンスを返す
+				logger.log(Level.SEVERE, "Faild to get BookList.");
 				BookList bookList = new BookList();
 				ResponseEntity<BookList> responseBook = new ResponseEntity<BookList>(bookList, HttpStatus.INTERNAL_SERVER_ERROR);
 				model.addAttribute("bookList", responseBook.getBody().getBookListPage()); // bookListをModelに格納
 			}
 			
-			logger.log(Level.INFO, "Return home page and show bookList.");
+			logger.log(Level.INFO, "Return home page and show BookList.");
 			return "home";
 		}
 		catch (Exception e) {
@@ -104,6 +105,7 @@ public class BookReviewBFFController {
 			}
 			catch (Exception e) {
 				// エラーでも画面表示できるように空のレスポンスを返す
+				logger.log(Level.SEVERE, "Faild to get BookList.");
 				BookList bookList = new BookList();
 				ResponseEntity<BookList> responseBook = new ResponseEntity<BookList>(bookList, HttpStatus.INTERNAL_SERVER_ERROR);
 				
@@ -112,7 +114,7 @@ public class BookReviewBFFController {
 				model.addAttribute("allPages", responseBook.getBody().getAllPages()); //  allPagesをModelに格納
 			}
 			
-			logger.log(Level.INFO, "Return home page and show bookList. (page = " + page + ")");
+			logger.log(Level.INFO, "Return home page and show BookList. (page = " + page + ")");
 			return "home";
 		}
 		catch (Exception e) {
@@ -152,6 +154,7 @@ public class BookReviewBFFController {
 				}
 				catch (Exception e) {
 					// エラーでも画面表示できるように空のレスポンスを返す
+					logger.log(Level.SEVERE, "Faild to get BookList.");
 					BookList bookList = new BookList();
 					ResponseEntity<BookList> responseBook = new ResponseEntity<BookList>(bookList, HttpStatus.INTERNAL_SERVER_ERROR);
 					
@@ -187,6 +190,7 @@ public class BookReviewBFFController {
 			}
 			catch (Exception e) {
 				// エラーでも画面表示できるように空のレスポンスを返す
+				logger.log(Level.SEVERE, "Faild to get Book.(bookid = " + bookid + ")");
 				Book book = new Book();
 				ResponseEntity<Book> responseBook = new ResponseEntity<Book>(book, HttpStatus.INTERNAL_SERVER_ERROR);
 				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
@@ -200,6 +204,7 @@ public class BookReviewBFFController {
 			}
 			catch (Exception e) {
 				// エラーでも画面表示できるように空のレスポンスを返す
+				logger.log(Level.SEVERE, "Faild to get ReviewList.(bookid = " + bookid + ")");
 				ReviewList reviewList = new ReviewList();
 				ResponseEntity<ReviewList> responseReview = new ResponseEntity<ReviewList>(reviewList, HttpStatus.INTERNAL_SERVER_ERROR);
 				model.addAttribute("reviewList", responseReview.getBody().getReviewListPage());
@@ -238,7 +243,7 @@ public class BookReviewBFFController {
 	
 	// Book編集画面
 	@GetMapping("/book/{bookid}/edit")
-	public String editBook(@RequestParam(value="user", required=false) String user, @PathVariable(value="bookid", required=true) int bookid, Model model) {
+	public String editBook(@RequestParam(value="user", required=false) String user, @PathVariable(value="bookid", required=true) int bookid, RedirectAttributes redirectAttributes, Model model) {
 		try {
 			logger.log(Level.INFO, "GET /book/" + bookid + "/edit?user=" + user);
 			
@@ -254,10 +259,10 @@ public class BookReviewBFFController {
 				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納	
 			}
 			catch(Exception e) {
-				// エラーでも画面表示できるように空のレスポンスを返す
-				Book book = new Book();
-				ResponseEntity<Book> responseBook = new ResponseEntity<Book>(book, HttpStatus.INTERNAL_SERVER_ERROR);
-				model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
+				// Bookを取得できない場合はhome画面にリダイレクト
+				logger.log(Level.SEVERE, "Book was not found.(bookid = " + bookid + ")");
+				redirectAttributes.addFlashAttribute("complete", "本の情報が見つかりませんでした。"); // リダイレクト時のパラメータを設定する（登録成功メッセージ）
+				return "redirect:/" + "?user=" + user;
 			}
 			
 			logger.log(Level.INFO, "Return editbook.(editFlag =" + editFlag + ")");
@@ -290,7 +295,7 @@ public class BookReviewBFFController {
 			logger.log(Level.INFO, "Insert book.");
 			ResponseEntity<Book> responseBook = postBookInsertApi(postBook); // Book新規登録API実行メソッド
 			logger.log(Level.INFO, "Book has returned.(bookid = " + responseBook.getBody().getId() + ")");
-			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
+			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納（不要？？）
 			
 			redirectAttributes.addFlashAttribute("complete", "本の登録が完了しました。"); // リダイレクト時のパラメータを設定する（登録成功メッセージ）
 			logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "?user=" + user);
@@ -328,7 +333,7 @@ public class BookReviewBFFController {
 			logger.log(Level.INFO, "Update book.(bookid = " + bookid + ")");
 			ResponseEntity<Book> responseBook = postBookUpdateApi(bookid, postBook); // Book更新API実行メソッド
 			logger.log(Level.INFO, "Book has returned.(bookid = " + responseBook.getBody().getId() + ")");
-			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納
+			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納（不要？？）
 			
 			redirectAttributes.addFlashAttribute("complete", "本の更新が完了しました。"); // リダイレクト時のパラメータを設定する（更新成功メッセージ）
 			logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "/detail/?user=" + user);
@@ -352,8 +357,9 @@ public class BookReviewBFFController {
 			
 			model.addAttribute("user", user); // userをModelに格納
 			
-			logger.log(Level.INFO, "Delete book.(bookid = " + bookid + ")");
+			logger.log(Level.INFO, "Delete Book.(bookid = " + bookid + ")");
 			deleteBookApi(user, bookid); // Book削除API実行メソッド
+			logger.log(Level.INFO, "Book has deleted.(bookid = " + bookid + ")");
 			
 			redirectAttributes.addFlashAttribute("complete", "対象の本の削除が完了しました。"); // リダイレクト時のパラメータを設定する（削除完了メッセージ）
 			logger.log(Level.INFO, "redirect:/?user=" + user);
@@ -377,7 +383,7 @@ public class BookReviewBFFController {
 			logger.log(Level.INFO, "GET /book/" + bookid + "/newreview?user=" + user);
 			
 			model.addAttribute("user", user); // userをModelに格納
-			model.addAttribute("bookid", bookid); // BookのidをModelに格納
+			model.addAttribute("bookid", bookid); // bookidをModelに格納
 			
 			logger.log(Level.INFO, "Get Book.(bookid = " + bookid + ")");
 			ResponseEntity<Book> responseBook = getBookApi(user, bookid);// Book取得API実行メソッド
@@ -455,7 +461,7 @@ public class BookReviewBFFController {
 		catch (Exception e) {
 			logger.log(Level.SEVERE, "Internal Server Error");
 			redirectAttributes.addFlashAttribute("complete", "レビューの削除に失敗しました。"); // リダイレクト時のパラメータを設定する（削除失敗メッセージ）
-			logger.log(Level.INFO, "Redirect to /book/" + bookid + "/detail?user=" + user);
+			logger.log(Level.INFO, "Redirect to /book/" + bookid + "?user=" + user);
 			return "redirect:/book/" + bookid + "?user=" + user;
 		} 
 	}
