@@ -295,7 +295,6 @@ public class BookReviewBFFController {
 			logger.log(Level.INFO, "Insert book.");
 			ResponseEntity<Book> responseBook = postBookInsertApi(postBook); // Book新規登録API実行メソッド
 			logger.log(Level.INFO, "Book has returned.(bookid = " + responseBook.getBody().getId() + ")");
-			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納（不要？？）
 			
 			redirectAttributes.addFlashAttribute("complete", "本の登録が完了しました。"); // リダイレクト時のパラメータを設定する（登録成功メッセージ）
 			logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "?user=" + user);
@@ -333,7 +332,6 @@ public class BookReviewBFFController {
 			logger.log(Level.INFO, "Update book.(bookid = " + bookid + ")");
 			ResponseEntity<Book> responseBook = postBookUpdateApi(bookid, postBook); // Book更新API実行メソッド
 			logger.log(Level.INFO, "Book has returned.(bookid = " + responseBook.getBody().getId() + ")");
-			model.addAttribute("book", responseBook.getBody()); // bookをModelに格納（不要？？）
 			
 			redirectAttributes.addFlashAttribute("complete", "本の更新が完了しました。"); // リダイレクト時のパラメータを設定する（更新成功メッセージ）
 			logger.log(Level.INFO, "Redirect to /book/" + responseBook.getBody().getId() + "/detail/?user=" + user);
